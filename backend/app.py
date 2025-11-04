@@ -1,10 +1,35 @@
 """
-FastAPI应用简单入口 - Railway部署备用入口
+FastAPI应用简单入口 - Railway部署
 Simple FastAPI Entry Point for Railway Deployment
 """
 
-# 从主应用模块导入FastAPI实例
-from app.main import app
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# Railway会自动检测这个文件
-__all__ = ["app"]
+# 创建FastAPI应用实例
+app = FastAPI(
+    title="CPG2PVG-AI API",
+    description="Clinical Practice Guidelines to Public Guidelines AI System",
+    version="1.0.0"
+)
+
+# 配置CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    return {"message": "CPG2PVG-AI API", "status": "running"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "service": "cpg2pvg-backend"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
