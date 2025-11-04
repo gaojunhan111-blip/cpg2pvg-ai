@@ -1,16 +1,8 @@
-# Vercel ignore file - Exclude backend code
 backend/
 scripts/
-*.sql
-*.py
 requirements*.txt
-Dockerfile*
-docker-compose*
 pyproject.toml
+Dockerfile
+docker-compose.yml
 auto-deploy.*
 start-deployment.*
-*.md
-!frontend/
-
-# Keep only frontend files
-frontend/
