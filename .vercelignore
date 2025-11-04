@@ -1,0 +1,12 @@
+# Vercel忽略文件 - 避免部署后端代码
+backend/
+scripts/
+*.sql
+Dockerfile*
+docker-compose*
+auto-deploy.*
+DEPLOYMENT_*.md
+CLOUD_*.md
+RAILWAY_*.md
+*.md
+!frontend/README.md
