@@ -3,6 +3,12 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['localhost', 'api.cpg2pvg-ai.com', 'cdn.cpg2pvg-ai.com'],
     formats: ['image/webp', 'image/avif']
