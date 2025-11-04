@@ -1,0 +1,390 @@
+{
+  "analysis_timestamp": "2025-11-03T23:26:57.553691",
+  "quality_score": 80,
+  "grade": "B (Good)",
+  "summary": {
+    "files_analyzed": 6,
+    "total_lines": 0,
+    "total_issues": 60
+  },
+  "issues": {
+    "documentation": [
+      {
+        "type": "missing_docstring",
+        "line": 34,
+        "message": "Class 'MockAutoTokenizer' is missing docstring"
+      },
+      {
+        "type": "missing_docstring",
+        "line": 39,
+        "message": "Class 'MockTokenizer' is missing docstring"
+      }
+    ],
+    "complexity": [
+      {
+        "type": "large_class",
+        "line": 259,
+        "message": "Class 'HierarchicalMedicalParser' is too long (964 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 362,
+        "message": "Function 'parse_medical_document' is too long (74 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 532,
+        "message": "Function '_analyze_document_structure' is too long (52 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 605,
+        "message": "Function '_extract_semantic_sections' is too long (90 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 1084,
+        "message": "Function 'adaptive_chunking' is too long (68 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 1153,
+        "message": "Function '_chunk_section_intelligently' is too long (70 lines)"
+      },
+      {
+        "type": "large_class",
+        "line": 349,
+        "message": "Class 'MultiModalProcessor' is too long (551 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 357,
+        "message": "Function 'process_guideline_content' is too long (98 lines)"
+      },
+      {
+        "type": "high_complexity",
+        "line": 357,
+        "message": "Function 'process_guideline_content' has high complexity (22)"
+      },
+      {
+        "type": "high_complexity",
+        "line": 565,
+        "message": "Function '_integrate_multimodal_content' has high complexity (12)"
+      },
+      {
+        "type": "long_function",
+        "line": 609,
+        "message": "Function '_is_clinically_important' is too long (68 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 679,
+        "message": "Function '_calculate_content_statistics' is too long (67 lines)"
+      },
+      {
+        "type": "large_class",
+        "line": 657,
+        "message": "Class 'MedicalKnowledgeGraph' is too long (1058 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 671,
+        "message": "Function 'enhance_semantic_understanding' is too long (53 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 747,
+        "message": "Function '_collect_text_content' is too long (74 lines)"
+      },
+      {
+        "type": "high_complexity",
+        "line": 747,
+        "message": "Function '_collect_text_content' has high complexity (12)"
+      },
+      {
+        "type": "long_function",
+        "line": 822,
+        "message": "Function '_extract_entities_with_rules' is too long (52 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 875,
+        "message": "Function '_extract_entities_with_model' is too long (61 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 995,
+        "message": "Function '_link_to_ontology' is too long (78 lines)"
+      },
+      {
+        "type": "high_complexity",
+        "line": 995,
+        "message": "Function '_link_to_ontology' has high complexity (15)"
+      },
+      {
+        "type": "long_function",
+        "line": 1302,
+        "message": "Function '_build_clinical_context' is too long (54 lines)"
+      },
+      {
+        "type": "large_class",
+        "line": 149,
+        "message": "Class 'BaseMedicalAgent' is too long (239 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 268,
+        "message": "Function '_get_fallback_template' is too long (52 lines)"
+      },
+      {
+        "type": "large_class",
+        "line": 21,
+        "message": "Class 'DiagnosisAgent' is too long (222 lines)"
+      },
+      {
+        "type": "large_class",
+        "line": 245,
+        "message": "Class 'TreatmentAgent' is too long (231 lines)"
+      },
+      {
+        "type": "high_complexity",
+        "line": 337,
+        "message": "Function '_extract_treatment_analysis' has high complexity (12)"
+      },
+      {
+        "type": "large_class",
+        "line": 40,
+        "message": "Class 'AgentCoordinator' is too long (231 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 81,
+        "message": "Function '_extract_consensus_insights' is too long (63 lines)"
+      },
+      {
+        "type": "high_complexity",
+        "line": 81,
+        "message": "Function '_extract_consensus_insights' has high complexity (13)"
+      },
+      {
+        "type": "large_class",
+        "line": 273,
+        "message": "Class 'IntelligentAgentOrchestrator' is too long (542 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 276,
+        "message": "Function '__init__' is too long (67 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 386,
+        "message": "Function 'process_medical_content' is too long (66 lines)"
+      },
+      {
+        "type": "long_function",
+        "line": 453,
+        "message": "Function '_filter_relevant_content' is too long (51 lines)"
+      }
+    ],
+    "length": [
+      {
+        "type": "long_line",
+        "line": 482,
+        "message": "Line 482 is too long (137 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 482,
+        "message": "Line 482 is too long (137 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 482,
+        "message": "Line 482 is too long (137 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 482,
+        "message": "Line 482 is too long (137 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 482,
+        "message": "Line 482 is too long (137 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 706,
+        "message": "Line 706 is too long (128 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 707,
+        "message": "Line 707 is too long (122 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 706,
+        "message": "Line 706 is too long (128 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 706,
+        "message": "Line 706 is too long (128 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 706,
+        "message": "Line 706 is too long (128 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 1044,
+        "message": "Line 1044 is too long (156 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 1044,
+        "message": "Line 1044 is too long (156 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 1044,
+        "message": "Line 1044 is too long (156 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 1044,
+        "message": "Line 1044 is too long (156 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 1044,
+        "message": "Line 1044 is too long (156 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 26,
+        "message": "Line 26 is too long (144 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 26,
+        "message": "Line 26 is too long (144 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 250,
+        "message": "Line 250 is too long (150 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 250,
+        "message": "Line 250 is too long (150 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 483,
+        "message": "Line 483 is too long (147 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 162,
+        "message": "Line 162 is too long (145 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 163,
+        "message": "Line 163 is too long (144 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 162,
+        "message": "Line 162 is too long (145 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 162,
+        "message": "Line 162 is too long (145 chars)"
+      },
+      {
+        "type": "long_line",
+        "line": 162,
+        "message": "Line 162 is too long (145 chars)"
+      }
+    ],
+    "naming": [],
+    "imports": []
+  },
+  "recommendations": [
+    {
+      "category": "Complexity",
+      "priority": "High",
+      "count": 33,
+      "description": "发现 33 个复杂度过高的函数，需要重构"
+    },
+    {
+      "category": "Code Length",
+      "priority": "Medium",
+      "count": 25,
+      "description": "发现 25 行过长的代码，需要格式化"
+    }
+  ],
+  "file_metrics": {
+    "app/services/medical_parser.py": {
+      "total_lines": 1244,
+      "classes": 16,
+      "functions": 35,
+      "complex_functions": 5,
+      "long_lines": 66,
+      "imports": 21,
+      "docstrings": 46
+    },
+    "app/services/multimodal_processor.py": {
+      "total_lines": 956,
+      "classes": 14,
+      "functions": 38,
+      "complex_functions": 3,
+      "long_lines": 273,
+      "imports": 27,
+      "docstrings": 44
+    },
+    "app/services/knowledge_graph.py": {
+      "total_lines": 1727,
+      "classes": 16,
+      "functions": 55,
+      "complex_functions": 6,
+      "long_lines": 54,
+      "imports": 9,
+      "docstrings": 66
+    },
+    "app/services/intelligent_agent.py": {
+      "total_lines": 387,
+      "classes": 9,
+      "functions": 15,
+      "complex_functions": 1,
+      "long_lines": 0,
+      "imports": 12,
+      "docstrings": 23
+    },
+    "app/services/medical_agents.py": {
+      "total_lines": 647,
+      "classes": 5,
+      "functions": 33,
+      "complex_functions": 0,
+      "long_lines": 10,
+      "imports": 7,
+      "docstrings": 32
+    },
+    "app/services/agent_orchestrator.py": {
+      "total_lines": 814,
+      "classes": 3,
+      "functions": 25,
+      "complex_functions": 4,
+      "long_lines": 72,
+      "imports": 13,
+      "docstrings": 26
+    }
+  }
+}

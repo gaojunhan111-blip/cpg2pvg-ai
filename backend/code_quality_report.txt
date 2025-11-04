@@ -1,0 +1,7 @@
+Analyzing 101 Python files...
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\Desktop\my_project\cpg2pvg-ai\backend\scripts\code_quality_analyzer.py", line 312, in <module>
+    main()
+  File "C:\Users\Lenovo\Desktop\my_project\cpg2pvg-ai\backend\scripts\code_quality_analyzer.py", line 301, in main
+    print(report)
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f4ca' in position 166: illegal multibyte sequence

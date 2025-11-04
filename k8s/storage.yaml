@@ -1,0 +1,349 @@
+---
+# CPG2PVG-AI Storage Configuration
+# Persistent Volumes and Claims
+
+---
+# PostgreSQL Storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: postgres
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/postgres
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - postgres
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: postgres
+    component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: postgres
+
+---
+# Redis Storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: redis
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/redis
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - redis
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: redis
+    component: cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: redis
+
+---
+# MinIO Storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: minio
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/minio
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - minio
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: minio
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: minio
+
+---
+# Application Storage (Uploads, Outputs, Temp)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-uploads-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: cpg2pvg-ai
+    component: uploads
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/uploads
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - cpg2pvg-ai
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-uploads-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: cpg2pvg-ai
+    component: uploads
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: cpg2pvg-ai
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-outputs-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: cpg2pvg-ai
+    component: outputs
+spec:
+  capacity:
+    storage: 300Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/outputs
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - cpg2pvg-ai
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-outputs-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: cpg2pvg-ai
+    component: outputs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 300Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: cpg2pvg-ai
+
+---
+# Logs Storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-logs-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: cpg2pvg-ai
+    component: logs
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/logs
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - cpg2pvg-ai
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-logs-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: cpg2pvg-ai
+    component: logs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: cpg2pvg-ai
+
+---
+# Backup Storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-backups-pv
+  namespace: cpg2pvg-ai
+  labels:
+    type: local
+    app: cpg2pvg-ai
+    component: backups
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /data/backups
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage
+          operator: In
+          values:
+          - cpg2pvg-ai
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-backups-pvc
+  namespace: cpg2pvg-ai
+  labels:
+    app: cpg2pvg-ai
+    component: backups
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      type: local
+      app: cpg2pvg-ai

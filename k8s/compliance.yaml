@@ -1,0 +1,520 @@
+---
+# Compliance Configuration for CPG2PVG-AI
+# Implements HIPAA, GDPR, SOC 2 compliance requirements
+
+---
+# Pod Security Standards for Compliance
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cpg2pvg-ai
+  labels:
+    # HIPAA Compliance
+    security.hipaa.compliance: "enforced"
+    # GDPR Compliance
+    privacy.gdpr.compliance: "enforced"
+    # SOC 2 Compliance
+    trust.soc2.compliance: "enforced"
+    # Pod Security Standards
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    # Data Classification
+    data.classification: "phi"  # Protected Health Information
+    data.residency: "us"  # Data residency requirement
+
+---
+# HIPAA Compliance ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hipaa-compliance-config
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.hipaa: "enabled"
+    app.kubernetes.io/name: hipaa-compliance
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  hipaa-audit-logging.yml: |
+    # HIPAA Audit Logging Configuration
+    audit_events:
+      - user_access
+      - data_modification
+      - authentication_success
+      - authentication_failure
+      - privilege_escalation
+      - system_configuration
+      - data_export
+      - data_deletion
+      - admin_actions
+
+    retention_period_days: 2555  # 7 years for HIPAA
+    backup_retention_days: 2555
+    access_log_format: json
+    audit_trail_enabled: true
+
+  hipaa-data-classification.yml: |
+    # HIPAA Data Classification
+    phi_data_types:
+      - medical_records
+      - patient_identifiers
+      - treatment_history
+      - billing_information
+      - insurance_claims
+      - lab_results
+      - prescriptions
+
+    encryption_requirements:
+      at_rest: aes-256
+      in_transit: tls-1.3
+      backup_encryption: aes-256
+
+    access_control:
+      mfa_required: true
+      session_timeout: 900  # 15 minutes
+      password_complexity: "high"
+      failed_login_lockout: 5
+
+---
+# GDPR Compliance ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gdpr-compliance-config
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.gdpr: "enabled"
+    app.kubernetes.io/name: gdpr-compliance
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  gdpr-data-processing.yml: |
+    # GDPR Data Processing Configuration
+    data_subject_rights:
+      - right_to_access
+      - right_to_rectification
+      - right_to_erasure
+      - right_to_portability
+      - right_to_object
+      - right_to_restriction
+
+    data_processing_purposes:
+      - medical_treatment
+      - healthcare_operations
+      - billing_and_administration
+      - quality_improvement
+      - research_analytics
+
+    lawful_basis_for_processing:
+      - "explicit_consent"
+      - "healthcare_treatment"
+      - "public_interest"
+      - "legal_obligation"
+
+    data_minimization:
+      enabled: true
+      purpose_limitation: true
+      storage_limitation: true
+      accuracy_principle: true
+
+  gdpr-consent-management.yml: |
+    # GDPR Consent Management
+    consent_requirements:
+      explicit_consent: true
+      granular_consent: true
+      withdrawal_allowed: true
+      consent_records: true
+      age_verification: true
+
+    consent_purposes:
+      - data_processing
+      - data_sharing
+      - marketing_communications
+      - analytics_cookies
+      - third_party_integrations
+
+    cookie_compliance:
+      consent_required: true
+      granular_options: true
+      easy_withdrawal: true
+      privacy_policy_link: true
+
+---
+# SOC 2 Compliance ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: soc2-compliance-config
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.soc2: "enabled"
+    app.kubernetes.io/name: soc2-compliance
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  soc2-security-controls.yml: |
+    # SOC 2 Security Controls
+    access_controls:
+      user_authentication: mfa_required
+      access_reviews: quarterly
+      least_privilege: enforced
+      separation_of_duties: enabled
+
+    system_security:
+      encryption_at_rest: aes-256
+      encryption_in_transit: tls-1.3
+      vulnerability_scanning: weekly
+      penetration_testing: quarterly
+      security_awareness_training: annual
+
+    incident_response:
+      detection_time: "< 1 hour"
+      response_time: "< 4 hours"
+      escalation_procedures: documented
+      incident_reporting: documented
+      post_incident_review: required
+
+  soc2-availability-controls.yml: |
+    # SOC 2 Availability Controls
+    uptime_sla: "99.9%"
+    disaster_recovery:
+      rto: "4 hours"  # Recovery Time Objective
+      rpo: "1 hour"   # Recovery Point Objective
+      backup_frequency: daily
+      offsite_backup: true
+
+    monitoring:
+      performance_metrics: real_time
+      capacity_planning: automated
+      failover_testing: quarterly
+      incident_alerting: immediate
+
+---
+# Compliance Enforcement NetworkPolicy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: compliance-network-policy
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.enforcement: "enabled"
+    app.kubernetes.io/name: compliance-network-policy
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only allow traffic from compliant sources
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              compliance.approved: "true"
+        - podSelector:
+            matchLabels:
+              compliance.approved: "true"
+      ports:
+        - protocol: TCP
+          port: 8000  # Backend API
+        - protocol: TCP
+          port: 3000  # Frontend
+  egress:
+    # Only allow compliant outbound traffic
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443   # HTTPS only
+        - protocol: TCP
+          port: 5432  # PostgreSQL
+        - protocol: TCP
+          port: 6379  # Redis
+        - protocol: TCP
+          port: 9000  # MinIO
+        - protocol: UDP
+          port: 53    # DNS
+
+---
+# Compliance Audit Logging Sidecar
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-audit-config
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.audit: "enabled"
+    app.kubernetes.io/name: audit-logging
+    app.kubernetes.io/component: sidecar
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  audit-config.json: |
+    {
+      "audit_logging": {
+        "enabled": true,
+        "format": "json",
+        "events": [
+          "user_authentication",
+          "data_access",
+          "data_modification",
+          "admin_actions",
+          "system_changes",
+          "failed_login_attempts",
+          "privilege_escalation",
+          "data_export",
+          "data_deletion"
+        ],
+        "retention": {
+          "days": 2555,
+          "backup_retention_days": 2555
+        },
+        "outputs": [
+          {
+            "type": "file",
+            "path": "/var/log/compliance/audit.log",
+            "rotation": "daily"
+          },
+          {
+            "type": "syslog",
+            "endpoint": "syslog-service:514"
+          },
+          {
+            "type": "s3",
+            "bucket": "compliance-audit-logs",
+            "prefix": "audit-logs/"
+          }
+        ],
+        "alerting": {
+          "enabled": true,
+          "critical_events": [
+            "data_breach_attempt",
+            "unauthorized_admin_access",
+            "mass_data_export",
+            "data_deletion_without_approval"
+          ]
+        }
+      }
+    }
+
+---
+# Compliance Monitoring Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance-monitor
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: compliance-monitor
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+    compliance.monitoring: "enabled"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: compliance-monitor
+      app.kubernetes.io/component: monitoring
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: compliance-monitor
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: cpg2pvg-ai
+        compliance.monitoring: "enabled"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: compliance-monitor
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: compliance-monitor
+          image: openpolicyagent/gatekeeper:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting compliance monitoring..."
+              while true; do
+                # Monitor for compliance violations
+                kubectl get events -n cpg2pvg-ai --field-selector type=Warning --sort-by='.lastTimestamp' | tail -10
+
+                # Check security context compliance
+                kubectl get pods -n cpg2pvg-ai -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .spec.containers[*]}{.name}{"\t"}{.securityContext.privileged}{"\n"}{end}{end}' | grep true || true
+
+                # Check resource limits compliance
+                kubectl get pods -n cpg2pvg-ai -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .spec.containers[*]}{.name}{"\t"}{.resources.limits.cpu}{"\n"}{end}{end}' | grep "<none>" || true
+
+                sleep 60
+              done
+          env:
+            - name: NAMESPACE
+              value: "cpg2pvg-ai"
+            - name: COMPLIANCE_FRAMEWORK
+              value: "hipaa,gdpr,soc2"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+
+---
+# Compliance Monitor ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: compliance-monitor
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: compliance-monitor
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: cpg2pvg-ai
+
+---
+# Compliance Monitor RBAC
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: compliance-monitor
+  labels:
+    app.kubernetes.io/name: compliance-monitor
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: cpg2pvg-ai
+rules:
+- apiGroups: [""]
+  resources: ["events", "pods", "services"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["policy"]
+  resources: ["podsecuritypolicies"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: compliance-monitor
+  labels:
+    app.kubernetes.io/name: compliance-monitor
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: cpg2pvg-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: compliance-monitor
+subjects:
+- kind: ServiceAccount
+  name: compliance-monitor
+  namespace: cpg2pvg-ai
+
+---
+# Data Retention Policy
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-retention-policy
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.retention: "enabled"
+    app.kubernetes.io/name: data-retention
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  retention-policy.json: |
+    {
+      "data_retention": {
+        "patient_data": {
+          "retention_years": 7,
+          "auto_delete": true,
+          "audit_trail_retention_years": 7,
+          "backup_retention_years": 7
+        },
+        "user_accounts": {
+          "inactive_retention_days": 365,
+          "audit_trail_retention_years": 7
+        },
+        "audit_logs": {
+          "retention_years": 7,
+          "backup_retention_years": 7
+        },
+        "system_logs": {
+          "retention_days": 90,
+          "security_logs_retention_years": 1
+        },
+        "backups": {
+          "daily_retention_days": 30,
+          "weekly_retention_weeks": 12,
+          "monthly_retention_months": 12,
+          "annual_retention_years": 7
+        }
+      },
+      "data_deletion": {
+        "methods": ["secure_erase", "cryptographic_delete"],
+        "verification_required": true,
+        "approval_workflow": true,
+        "audit_deletion": true
+      }
+    }
+
+---
+# Data Anonymization ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-anonymization-config
+  namespace: cpg2pvg-ai
+  labels:
+    compliance.anonymization: "enabled"
+    app.kubernetes.io/name: data-anonymization
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  anonymization-rules.json: |
+    {
+      "anonymization": {
+        "enabled": true,
+        "phi_fields": [
+          "patient_name",
+          "patient_ssn",
+          "medical_record_number",
+          "date_of_birth",
+          "address",
+          "phone_number",
+          "email_address",
+          "insurance_number"
+        ],
+        "techniques": {
+          "name": "pseudonymization",
+          "dates": "generalization",
+          "identifiers": "tokenization",
+          "free_text": "redaction"
+        },
+        "preserve_fields": [
+          "age_group",
+          "gender",
+          "diagnosis_category",
+          "treatment_outcome",
+          "provider_specialty"
+        ]
+      }
+    }

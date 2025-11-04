@@ -1,0 +1,461 @@
+---
+# CPG2PVG-AI Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cpg2pvg-ai
+    version: v1.0.0
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: cpg2pvg-ai
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-db
+          image: postgres:15-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for database to be ready..."
+              until pg_isready -h postgres-service -U $POSTGRES_USER -d $POSTGRES_DB; do
+                echo "Database not ready, waiting..."
+                sleep 2
+              done
+              echo "Database is ready!"
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+        - name: wait-for-redis
+          image: redis:7-alpine
+          command:
+            - /bin/sh
+            -c
+            - |
+              echo "Waiting for Redis to be ready..."
+              until redis-cli -h redis-service ping; do
+                echo "Redis not ready, waiting..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+        - name: wait-for-minio
+          image: busybox:1.35
+          command:
+            - /bin/sh
+            -c
+            - |
+              echo "Waiting for MinIO to be ready..."
+              until wget -q --spider http://minio-service:9000/minio/health/live; do
+                echo "MinIO not ready, waiting..."
+                sleep 5
+              done
+              echo "MinIO is ready!"
+      containers:
+        - name: backend
+          image: cpg2pvg-ai/backend:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: connection-uri
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_BROKER_URL
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_RESULT_BACKEND
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: MINIO_ENDPOINT
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+            - name: MINIO_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: MINIO_BUCKET
+            - name: MINIO_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: MINIO_SECURE
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: app-secret
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: DEBUG
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: LOG_LEVEL
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: ENVIRONMENT
+            - name: PROJECT_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: PROJECT_NAME
+            - name: VERSION
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: VERSION
+            - name: API_V1_STR
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: API_V1_STR
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: ALLOWED_HOSTS
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CORS_ORIGINS
+            - name: MAX_FILE_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: MAX_FILE_SIZE
+            - name: UPLOAD_DIR
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: UPLOAD_DIR
+            - name: OUTPUT_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: OUTPUT_DIR
+            - name: TEMP_DIR
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: TEMP_DIR
+            - name: BACKUP_DIR
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: BACKUP_DIR
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: openai-api-key
+            - name: OPENAI_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: OPENAI_MODEL
+            - name: OPENAI_MAX_TOKENS
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: OPENAI_MAX_TOKENS
+            - name: OPENAI_TEMPERATURE
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: OPENAI_TEMPERATURE
+            - name: CELERY_WORKER_CONCURRENCY
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_WORKER_CONCURRENCY
+            - name: CELERY_WORKER_PREFETCH_MULTIPLIER
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_WORKER_PREFETCH_MULTIPLIER
+            - name: CELERY_TASK_ACKS_LATE
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_TASK_ACKS_LATE
+            - name: CELERY_WORKER_DISABLE_RATE_LIMITS
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_WORKER_DISABLE_RATE_LIMITS
+            - name: WORKER_TIMEOUT
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: WORKER_TIMEOUT
+            - name: MAX_CONCURRENT_TASKS
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: MAX_CONCURRENT_TASKS
+            - name: TASK_SOFT_TIME_LIMIT
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: TASK_SOFT_TIME_LIMIT
+            - name: TASK_TIME_LIMIT
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: TASK_TIME_LIMIT
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: app-uploads
+              mountPath: /app/uploads
+            - name: app-outputs
+              mountPath: /app/outputs
+            - name: app-temp
+              mountPath: /app/temp
+            - name: app-backups
+              mountPath: /app/backups
+            - name: app-logs
+              mountPath: /app/logs
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+      volumes:
+        - name: app-uploads
+          persistentVolumeClaim:
+            claimName: app-uploads-pvc
+        - name: app-outputs
+          persistentVolumeClaim:
+            claimName: app-outputs-pvc
+        - name: app-temp
+          emptyDir: {}
+        - name: app-backups
+          persistentVolumeClaim:
+            claimName: app-backups-pvc
+        - name: app-logs
+          persistentVolumeClaim:
+            claimName: app-logs-pvc
+      nodeSelector:
+        nodeType: application
+        storage: fast-ssd
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - backend
+              topologyKey: kubernetes.io/hostname
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                  - api
+              topologyKey: kubernetes.io/hostname
+      tolerations:
+        - key: "application"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+
+---
+# Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cpg2pvg-ai
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8000
+      name: http
+      protocol: TCP
+    - port: 8000
+      targetPort: 8000
+      name: api
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+  sessionAffinity: None
+
+---
+# Backend Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: 100
+
+---
+# Backend PodDisruptionBudget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-pdb
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  minAvailable: 1
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/component: api

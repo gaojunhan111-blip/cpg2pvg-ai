@@ -1,0 +1,499 @@
+{
+  "project_summary": {
+    "total_modules": 140,
+    "module_types": {
+      "api": 10,
+      "services": 23,
+      "models": 15,
+      "core": 15,
+      "schemas": 7,
+      "workflows": 14,
+      "tasks": 2,
+      "utils": 1,
+      "enums": 1,
+      "other": 52
+    },
+    "total_dependencies": 0
+  },
+  "dependency_matrix": {
+    "api": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "services": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "models": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "core": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "schemas": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "workflows": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "tasks": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "utils": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "enums": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    },
+    "other": {
+      "api": 0,
+      "services": 0,
+      "models": 0,
+      "core": 0,
+      "schemas": 0,
+      "workflows": 0,
+      "tasks": 0,
+      "utils": 0,
+      "enums": 0,
+      "other": 0
+    }
+  },
+  "circular_dependencies": [],
+  "coupling_analysis": {
+    "api": {
+      "module_count": 10,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "services": {
+      "module_count": 23,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "models": {
+      "module_count": 15,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "core": {
+      "module_count": 15,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "schemas": {
+      "module_count": 7,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "workflows": {
+      "module_count": 14,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "tasks": {
+      "module_count": 2,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "utils": {
+      "module_count": 1,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "enums": {
+      "module_count": 1,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    },
+    "other": {
+      "module_count": 52,
+      "outbound_coupling": 0,
+      "inbound_coupling": 0,
+      "total_coupling": 0,
+      "instability": 0,
+      "outbound_modules": [],
+      "inbound_modules": []
+    }
+  },
+  "interface_consistency": {
+    "issues": [
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow_endpoints.py",
+        "service_name": "get_slow_workflow_orchestrator",
+        "import_stmt": "app.services.slow_workflow_orchestrator.get_slow_workflow_orchestrator"
+      },
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow_endpoints.py",
+        "service_name": "WorkflowConfig",
+        "import_stmt": "app.services.slow_workflow_orchestrator.WorkflowConfig"
+      },
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow_endpoints.py",
+        "service_name": "WorkflowStatus",
+        "import_stmt": "app.services.slow_workflow_orchestrator.WorkflowStatus"
+      },
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow.py",
+        "service_name": "get_workflow_orchestrator",
+        "import_stmt": "app.services.workflow_orchestrator.get_workflow_orchestrator"
+      },
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow.py",
+        "service_name": "WorkflowConfig",
+        "import_stmt": "app.services.workflow_orchestrator.WorkflowConfig"
+      },
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow.py",
+        "service_name": "ProcessingMode",
+        "import_stmt": "app.services.workflow_orchestrator.ProcessingMode"
+      },
+      {
+        "type": "missing_service",
+        "api_file": "app\\api\\v1\\endpoints\\workflow.py",
+        "service_name": "get_performance_monitor",
+        "import_stmt": "app.services.performance_monitor.get_performance_monitor"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\processing_result.py",
+        "model_name": "processing_result"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\medical_document.py",
+        "model_name": "medical_document"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "fix_models.py",
+        "model_name": "fix_models"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\pvg_document.py",
+        "model_name": "pvg_document"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\task_progress.py",
+        "model_name": "task_progress"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\multimodal_content.py",
+        "model_name": "multimodal_content"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "scripts\\download_nlp_models.py",
+        "model_name": "download_nlp_models"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\knowledge_graph.py",
+        "model_name": "knowledge_graph"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "app\\models\\intelligent_agent.py",
+        "model_name": "intelligent_agent"
+      },
+      {
+        "type": "missing_schema",
+        "model_file": "test_models.py",
+        "model_name": "test_models"
+      }
+    ],
+    "api_service_alignment": false,
+    "model_schema_alignment": false
+  },
+  "architecture_analysis": {
+    "violations": [],
+    "compliance_score": 100,
+    "recommendations": []
+  },
+  "detailed_dependencies": {},
+  "module_hierarchy": {
+    "api": [
+      "app\\api\\v1\\api.py",
+      "app\\api\\v1\\endpoints\\tasks.py",
+      "app\\api\\v1\\endpoints\\auth.py",
+      "app\\api\\v1\\endpoints\\guidelines.py",
+      "app\\api\\v1\\endpoints\\health.py",
+      "app\\api\\v1\\endpoints\\files.py",
+      "app\\api\\v1\\endpoints\\__init__.py",
+      "app\\api\\v1\\endpoints\\users.py",
+      "app\\api\\v1\\endpoints\\workflow_endpoints.py",
+      "app\\api\\v1\\endpoints\\workflow.py"
+    ],
+    "services": [
+      "app\\services\\file_storage.py",
+      "app\\services\\performance_monitor.py",
+      "app\\services\\multimodal_processor_tables.py",
+      "app\\services\\performance_optimizer.py",
+      "app\\services\\hierarchical_parser.py",
+      "app\\services\\intelligent_agent.py",
+      "app\\services\\multimodal_processor_algorithms.py",
+      "app\\services\\pvg_templates.py",
+      "app\\services\\agent_orchestrator.py",
+      "app\\services\\medical_parser.py",
+      "app\\services\\minio_setup.py",
+      "app\\services\\medical_cache.py",
+      "scripts\\test_core_services.py",
+      "app\\services\\quality_controller.py",
+      "app\\services\\multimodal_processor_impl.py",
+      "app\\services\\slow_workflow_orchestrator.py",
+      "app\\services\\progressive_generator.py",
+      "app\\services\\knowledge_graph.py",
+      "app\\services\\workflow_orchestrator.py",
+      "app\\services\\cost_optimizer.py",
+      "scripts\\test_core_services_ascii.py",
+      "app\\services\\medical_agents.py",
+      "app\\services\\multimodal_processor.py"
+    ],
+    "models": [
+      "app\\models\\processing_result.py",
+      "app\\models\\base.py",
+      "app\\models\\medical_document.py",
+      "fix_models.py",
+      "app\\models\\user.py",
+      "app\\models\\pvg_document.py",
+      "app\\models\\task_progress.py",
+      "app\\models\\task.py",
+      "app\\models\\multimodal_content.py",
+      "scripts\\download_nlp_models.py",
+      "app\\models\\knowledge_graph.py",
+      "app\\models\\intelligent_agent.py",
+      "test_models.py",
+      "app\\models\\__init__.py",
+      "app\\models\\guideline.py"
+    ],
+    "core": [
+      "app\\core\\security.py",
+      "app\\core\\enhanced_logger.py",
+      "app\\core\\config.py",
+      "app\\core\\error_handling.py",
+      "app\\core\\file_manager.py",
+      "app\\core\\visualizer.py",
+      "app\\core\\parser.py",
+      "app\\core\\__init__.py",
+      "app\\core\\llm_config.py",
+      "app\\core\\auth.py",
+      "app\\core\\llm_client.py",
+      "app\\core\\redis_client.py",
+      "app\\core\\celery_app.py",
+      "app\\core\\database.py",
+      "app\\core\\logger.py"
+    ],
+    "schemas": [
+      "app\\schemas\\workflow.py",
+      "app\\schemas\\user.py",
+      "app\\schemas\\guideline.py",
+      "app\\schemas\\medical_schemas.py",
+      "app\\schemas\\task.py",
+      "app\\schemas\\pvg_schemas.py",
+      "app\\schemas\\__init__.py"
+    ],
+    "workflows": [
+      "app\\workflows\\slow_mode\\document_parser.py",
+      "app\\workflows\\slow_mode\\orchestrator.py",
+      "app\\workflows\\slow_mode\\cache_system.py",
+      "app\\workflows\\slow_mode\\quality_controller.py",
+      "app\\workflows\\slow_mode\\content_generator.py",
+      "app\\workflows\\slow_mode\\knowledge_graph.py",
+      "app\\workflows\\base.py",
+      "app\\workflows\\slow_mode\\__init__.py",
+      "app\\workflows\\types.py",
+      "app\\workflows\\__init__.py",
+      "app\\workflows\\slow_mode\\agent_system.py",
+      "app\\workflows\\slow_mode\\cost_optimizer.py",
+      "app\\workflows\\slow_mode\\performance_monitor.py",
+      "app\\workflows\\slow_mode\\multimodal_processor.py"
+    ],
+    "tasks": [
+      "app\\tasks\\guideline_tasks.py",
+      "app\\tasks\\__init__.py"
+    ],
+    "utils": [
+      "app\\utils\\mock_spacy.py"
+    ],
+    "enums": [
+      "app\\enums\\common.py"
+    ],
+    "other": [
+      "scripts\\setup_file_storage.py",
+      "scripts\\test_multimodal_processor.py",
+      "scripts\\test_architecture_validation.py",
+      "celery_worker\\workflow_nodes\\node5_progressive_generator.py",
+      "examples\\medical_parser_usage.py",
+      "scripts\\test_knowledge_graph_simple.py",
+      "scripts\\check_compatibility_simple.py",
+      "scripts\\fix_indentation.py",
+      "scripts\\fix_encoding.py",
+      "scripts\\test_knowledge_graph.py",
+      "scripts\\test_complete_workflow.py",
+      "scripts\\fix_workflow_nodes.py",
+      "test_main.py",
+      "scripts\\comprehensive_system_compatibility_check.py",
+      "scripts\\setup_logging.py",
+      "celery_worker\\workflow_nodes\\node3_knowledge_graph.py",
+      "scripts\\setup_complete_system.py",
+      "scripts\\setup_security.py",
+      "scripts\\fix_service_modules.py",
+      "scripts\\simple_line_fix.py",
+      "scripts\\refactor_large_components.py",
+      "scripts\\simple_quality_analyzer.py",
+      "scripts\\final_quality_check.py",
+      "scripts\\generate_final_quality_report.py",
+      "scripts\\code_quality_analyzer.py",
+      "app\\main.py",
+      "celery_worker\\workflow\\base_node.py",
+      "scripts\\comprehensive_code_quality_check.py",
+      "scripts\\fix_agents_validation.py",
+      "alembic\\env.py",
+      "scripts\\rewrite_workflow_nodes.py",
+      "scripts\\test_kg_minimal.py",
+      "scripts\\optimize_code_formatting.py",
+      "celery_worker\\workflow_nodes\\node4_intelligent_agents.py",
+      "scripts\\quick_syntax_fix.py",
+      "dependency_analyzer.py",
+      "scripts\\check_system_compatibility.py",
+      "scripts\\fix_indentation_comprehensive.py",
+      "scripts\\test_medical_parser.py",
+      "celery_worker\\workflow_nodes\\node1_medical_parser.py",
+      "scripts\\fix_class_keywords.py",
+      "scripts\\comprehensive_indentation_fix.py",
+      "scripts\\system_compatibility_check_ascii.py",
+      "scripts\\comprehensive_code_analysis.py",
+      "scripts\\simple_quality_check.py",
+      "celery_worker\\workflow_nodes\\node2_multimodal_processor.py",
+      "system_integration_test.py",
+      "scripts\\setup_llm_providers.py",
+      "scripts\\test_kg_basic.py",
+      "app\\__init__.py",
+      "check_dependencies.py",
+      "test_imports.py"
+    ]
+  }
+}

@@ -1,0 +1,553 @@
+---
+# Falco Runtime Security Monitoring for CPG2PVG-AI
+# Provides real-time threat detection and incident response
+
+---
+# Falco Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: falco
+  labels:
+    name: falco
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: cpg2pvg-ai
+
+---
+# Falco Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: falco
+  namespace: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: cpg2pvg-ai
+
+---
+# Falco ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: cpg2pvg-ai
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - pods
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  - deployments
+  - daemonsets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/metrics
+  verbs:
+  - get
+  - nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+
+---
+# Falco ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: cpg2pvg-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: falco
+subjects:
+- kind: ServiceAccount
+  name: falco
+  namespace: falco
+
+---
+# Falco DaemonSet
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: falco
+  namespace: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: security-monitor
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: falco
+      app.kubernetes.io/component: security-monitor
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: falco
+        app.kubernetes.io/component: security-monitor
+        app.kubernetes.io/part-of: cpg2pvg-ai
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8765"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: falco
+      hostNetwork: true
+      hostPID: true
+      hostIPC: true
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
+      initContainers:
+        - name: init-falco
+          image: falcosecurity/falco:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Initializing Falco..."
+              # Ensure required kernel modules are loaded
+              modprobe br_netfilter || true
+              echo "Falco initialization completed"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+      containers:
+        - name: falco
+          image: falcosecurity/falco:latest
+          args:
+            - /usr/bin/falco
+            - --pid-file
+            - /var/run/falco/falco.pid
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: FALCO_BPF_PROBE
+              value: ""
+            - name: FALCO_LIBS_DIR
+              value: /host/usr/lib64
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            - name: dev
+              mountPath: /host/dev
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: usr-lib
+              mountPath: /host/usr/lib64
+              readOnly: true
+            - name: etc-passwd
+              mountPath: /host/etc/passwd
+              readOnly: true
+            - name: etc-group
+              mountPath: /host/etc/group
+              readOnly: true
+            - name: var-lib-docker
+              mountPath: /host/var/lib/docker
+              readOnly: true
+            - name: var-run-docker
+              mountPath: /host/var/run/docker.sock
+              readOnly: true
+            - name: etc-os-release
+              mountPath: /host/etc/os-release
+              readOnly: true
+            - name: etc-machine-id
+              mountPath: /host/etc/machine-id
+              readOnly: true
+            - name: etc-falco
+              mountPath: /etc/falco
+            - name: var-run-falco
+              mountPath: /var/run/falco
+            - name: var-lib-falco
+              mountPath: /var/lib/falco
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - cat
+                - /var/run/falco/falco.pid
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - ps aux | grep falco | grep -v grep
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: usr-lib
+          hostPath:
+            path: /usr/lib64
+        - name: etc-passwd
+          hostPath:
+            path: /etc/passwd
+        - name: etc-group
+          hostPath:
+            path: /etc/group
+        - name: var-lib-docker
+          hostPath:
+            path: /var/lib/docker
+        - name: var-run-docker
+          hostPath:
+            path: /var/run/docker.sock
+        - name: etc-os-release
+          hostPath:
+            path: /etc/os-release
+        - name: etc-machine-id
+          hostPath:
+            path: /etc/machine-id
+        - name: etc-falco
+          configMap:
+            name: falco-config
+        - name: var-run-falco
+          hostPath:
+            path: /var/run/falco
+        - name: var-lib-falco
+          hostPath:
+            path: /var/lib/falco
+
+---
+# Falco ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-config
+  namespace: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  falco_rules.yaml: |
+    # CPG2PVG-AI Custom Falco Rules
+    # Additional security rules specific to the application
+
+    - rule: Unexpected Process in Container
+      desc: Detect unexpected processes running in containers
+      condition: spawned_process and container and not proc.name in (nginx, node, python, celery, postgres, redis, minio, grafana, prometheus)
+      output: >
+        Unexpected process started in container (user=%user.name command=%proc.cmdline container=%container.name image=%container.image.repository)
+      priority: WARNING
+      tags: [process, container]
+
+    - rule: Sensitive File Access in Container
+      desc: Detect access to sensitive files in containers
+      condition: open_read and container and fd.name in (/etc/passwd, /etc/shadow, /etc/hosts, /etc/resolve.conf, /root/.ssh/, /home/.ssh/)
+      output: >
+        Sensitive file accessed in container (user=%user.name command=%proc.cmdline file=%fd.name container=%container.name)
+      priority: WARNING
+      tags: [file, container, security]
+
+    - rule: Database Connection from Untrusted Source
+      desc: Detect database connections from unexpected containers
+      condition: spawned_process and proc.name in (psql, mysql, redis-cli) and container and not container.image.repository in (postgres, redis, backend, celery-worker)
+      output: >
+        Database client started from unexpected container (user=%user.name command=%proc.cmdline container=%container.name image=%container.image.repository)
+      priority: WARNING
+      tags: [database, container, security]
+
+    - rule: Secret Access in Container
+      desc: Detect access to Kubernetes secrets in containers
+      condition: spawned_process and container and proc.name in (curl, wget) and proc.cmdline contains "api/v1/namespaces" and proc.cmdline contains "secrets"
+      output: >
+        Kubernetes secrets access detected (user=%user.name command=%proc.cmdline container=%container.name)
+      priority: HIGH
+      tags: [k8s, secrets, security]
+
+    - rule: Network Connection to External Service
+      desc: Detect network connections to external services
+      condition: inbound or outbound and container and not fd.sip in (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8) and not fd.name in (api.openai.com, api.anthropic.com)
+      output: >
+        Network connection to external service (user=%user.name command=%proc.cmdline container=%container.name sip=%fd.sip dip=%fd.dip sport=%fd.sport dport=%fd.dport)
+      priority: WARNING
+      tags: [network, container]
+
+    - rule: Container Privilege Escalation
+      desc: Detect privilege escalation attempts in containers
+      condition: spawned_process and container and proc.name in (su, sudo, chmod, chown) and not proc.cmdline contains "celery" and not proc.cmdline contains "postgres"
+      output: >
+        Privilege escalation attempt in container (user=%user.name command=%proc.cmdline container=%container.name)
+      priority: HIGH
+      tags: [privilege_escalation, container, security]
+
+    - rule: File System Modification in Critical Paths
+      desc: Detect modifications to critical system paths
+      condition: open_write and container and fd.name in (/etc/, /usr/bin/, /usr/sbin/, /root/, /bin/, /sbin/) and not proc.name in (apt, yum, apk)
+      output: >
+        Critical file system modification (user=%user.name command=%proc.cmdline file=%fd.name container=%container.name)
+      priority: HIGH
+      tags: [file_system, container, security]
+
+    - rule: Unexpected Child Process of Systemd
+      desc: Detect unexpected child processes of systemd
+      condition: spawned_process and proc.pname in (systemd) and not proc.name in (systemd, journald, dbus-daemon, NetworkManager)
+      output: >
+        Unexpected systemd child process (user=%user.name command=%proc.cmdline parent=%proc.pname)
+      priority: WARNING
+      tags: [process, system]
+
+  falco_rules.local.yaml: |
+    # Local custom rules for CPG2PVG-AI environment
+
+    - rule: Medical Data Access Pattern
+      desc: Detect unusual access patterns to medical data
+      condition: open_read and container and fd.name contains "/app/uploads/" and proc.name in (cat, less, more, vim) and not user.name in (app_user, healthcare_provider)
+      output: >
+        Medical data access by unexpected user (user=%user.name command=%proc.cmdline file=%fd.name container=%container.name)
+      priority: MEDIUM
+      tags: [data_access, medical_data, compliance]
+
+    - rule: AI Model API Calls
+      desc: Track AI model API calls for compliance
+      condition: spawned_process and container and proc.name in (curl, python) and proc.cmdline contains ("api.openai.com" or "api.anthropic.com")
+      output: >
+        AI model API call detected (user=%user.name command=%proc.cmdline container=%container.name)
+      priority: INFO
+      tags: [ai_api, compliance, audit]
+
+    - rule: Large File Upload
+      desc: Detect unusually large file uploads
+      condition: open_write and container and fd.name contains "/app/uploads/" and fd.size > 1000000000  # 1GB
+      output: >
+        Large file upload detected (user=%user.name size=%fd.size file=%fd.name container=%container.name)
+      priority: WARNING
+      tags: [file_upload, data_ingestion]
+
+  falco.yaml: |
+    # Falco configuration optimized for CPG2PVG-AI
+    base_config:
+      priority: warning
+      json_output: true
+      json_include_output_property: true
+      json_include_tags_property: true
+
+    programs:
+      - curl
+      - wget
+      - python
+      - node
+      - nginx
+      - postgres
+      - redis
+      - celery
+
+    time_format: "%Y-%m-%dT%H:%M:%S.%L"
+    buffered_outputs: true
+    buffer_size: 100
+
+    outputs:
+      - program:
+          name: k8saudit
+          enabled: true
+          keep_alive: true
+          http_output:
+            url: "http://falco-event-exporter:9200/events"
+            user_agent: "falco"
+
+      - program:
+          name: file
+          enabled: true
+          keep_alive: false
+          file_output:
+            filename: "/var/log/falco_events.log"
+            append: true
+
+      - program:
+          name: stdout
+          enabled: true
+          keep_alive: false
+          stdout_output:
+            keep_alive: false
+
+    syslog_output:
+      enabled: false
+
+    file_outputs:
+      - enabled: true
+        keep_alive: false
+        filename: "/var/log/falco_events.log"
+        append: true
+
+    http_output:
+      enabled: true
+      url: "http://falco-event-exporter:9200/events"
+
+    json_output: true
+    json_include_output_property: true
+    json_include_tags_property: true
+
+---
+# Falco Event Exporter
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: falco-event-exporter
+  namespace: falco
+  labels:
+    app.kubernetes.io/name: falco-event-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: falco-event-exporter
+      app.kubernetes.io/component: monitoring
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: falco-event-exporter
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: cpg2pvg-ai
+    spec:
+      serviceAccountName: falco
+      containers:
+        - name: falco-event-exporter
+          image: falcosecurity/falco-event-exporter:latest
+          args:
+            - --address=0.0.0.0
+            - --port=9200
+            - --format=json
+            - --output-file=/var/log/falco-events.json
+          ports:
+            - containerPort: 9200
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: falco-events
+              mountPath: /var/log
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9200
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: falco-events
+          persistentVolumeClaim:
+            claimName: falco-events-pvc
+
+---
+# Falco Event Exporter Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: falco-event-exporter
+  namespace: falco
+  labels:
+    app.kubernetes.io/name: falco-event-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8765"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9200
+      targetPort: 9200
+      name: http
+      protocol: TCP
+    - port: 8765
+      targetPort: 8765
+      name: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: falco-event-exporter
+    app.kubernetes.io/component: monitoring
+
+---
+# Falco Events Storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: falco-events-pvc
+  namespace: falco
+  labels:
+    app.kubernetes.io/name: falco-events
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-storage

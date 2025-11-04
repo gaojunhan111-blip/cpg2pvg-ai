@@ -1,0 +1,1637 @@
+{
+  "import_compatibility": {
+    "total_modules": 15,
+    "successful_imports": 13,
+    "success_rate": 0.8666666666666667,
+    "details": {
+      "app.core.config": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\core\\config.py",
+        "classes": [
+          "Any",
+          "BaseSettings",
+          "Dict",
+          "Field",
+          "List",
+          "Optional",
+          "Settings"
+        ],
+        "functions": [
+          "Any",
+          "BaseSettings",
+          "Dict",
+          "Field",
+          "List",
+          "Optional",
+          "Settings",
+          "get_settings",
+          "lru_cache",
+          "reload_settings",
+          "validate_settings"
+        ]
+      },
+      "app.core.database": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\core\\database.py",
+        "classes": [
+          "AsyncGenerator",
+          "AsyncSession",
+          "AsyncSessionLocal",
+          "NullPool",
+          "Optional"
+        ],
+        "functions": [
+          "AsyncGenerator",
+          "AsyncSession",
+          "AsyncSessionLocal",
+          "NullPool",
+          "Optional",
+          "async_sessionmaker",
+          "asynccontextmanager",
+          "cache_delete",
+          "cache_get",
+          "cache_set",
+          "check_db_health",
+          "cleanup_expired_data",
+          "close_db",
+          "close_redis",
+          "create_async_engine",
+          "create_indexes",
+          "db_transaction",
+          "declarative_base",
+          "get_db",
+          "get_db_session",
+          "get_db_stats",
+          "get_redis",
+          "init_db",
+          "init_default_data",
+          "init_redis"
+        ]
+      },
+      "app.core.logger": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\core\\logger.py",
+        "classes": [
+          "Any",
+          "Dict",
+          "Enum",
+          "JSONFormatter",
+          "LogCategory",
+          "LogContext",
+          "LogContextManager",
+          "LogLevel",
+          "Optional",
+          "Path",
+          "PlainFormatter",
+          "StructuredLogger",
+          "Union"
+        ],
+        "functions": [
+          "Any",
+          "Dict",
+          "Enum",
+          "JSONFormatter",
+          "LogCategory",
+          "LogContext",
+          "LogContextManager",
+          "LogLevel",
+          "Optional",
+          "Path",
+          "PlainFormatter",
+          "StructuredLogger",
+          "Union",
+          "asdict",
+          "clear_log_context",
+          "dataclass",
+          "datetime",
+          "get_log_context",
+          "get_logger",
+          "get_settings",
+          "log_api_request",
+          "log_api_response",
+          "log_audit_event",
+          "log_llm_call",
+          "log_performance_metric",
+          "log_security_event",
+          "log_workflow_event",
+          "set_log_context"
+        ]
+      },
+      "app.models.base": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\models\\base.py",
+        "classes": [
+          "Base",
+          "BaseModel",
+          "Column",
+          "DateTime",
+          "Integer",
+          "String",
+          "TimestampMixin",
+          "UUIDMixin"
+        ],
+        "functions": [
+          "Base",
+          "BaseModel",
+          "Column",
+          "DateTime",
+          "Integer",
+          "String",
+          "TimestampMixin",
+          "UUIDMixin",
+          "datetime",
+          "declarative_base",
+          "declared_attr",
+          "func"
+        ]
+      },
+      "app.services.medical_parser": {
+        "status": "failed",
+        "error": "No module named 'transformers'",
+        "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\scripts\\system_compatibility_check_ascii.py\", line 108, in _check_import_compatibility\n    module = importlib.import_module(module_name)\n  File \"D:\\py39\\lib\\importlib\\__init__.py\", line 127, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n  File \"<frozen importlib._bootstrap>\", line 1030, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1007, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 986, in _find_and_load_unlocked\n  File \"<frozen importlib._bootstrap>\", line 680, in _load_unlocked\n  File \"<frozen importlib._bootstrap_external>\", line 850, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 228, in _call_with_frames_removed\n  File \"C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\medical_parser.py\", line 9, in <module>\n    from transformers import AutoTokenizer\nModuleNotFoundError: No module named 'transformers'\n"
+      },
+      "app.services.multimodal_processor": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\multimodal_processor.py",
+        "classes": [
+          "Any",
+          "ContentModality",
+          "Dict",
+          "Enum",
+          "List",
+          "MultimodalProcessor",
+          "Optional",
+          "ProcessedContent"
+        ],
+        "functions": [
+          "Any",
+          "ContentModality",
+          "Dict",
+          "Enum",
+          "List",
+          "MultimodalProcessor",
+          "Optional",
+          "ProcessedContent",
+          "dataclass",
+          "datetime",
+          "field",
+          "get_logger",
+          "get_multimodal_processor"
+        ]
+      },
+      "app.services.knowledge_graph": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\knowledge_graph.py",
+        "classes": [
+          "Any",
+          "Dict",
+          "Entity",
+          "EntityType",
+          "Enum",
+          "KnowledgeGraph",
+          "KnowledgeGraphBuilder",
+          "List",
+          "Optional",
+          "Relation",
+          "RelationType",
+          "Set",
+          "Tuple"
+        ],
+        "functions": [
+          "Any",
+          "Dict",
+          "Entity",
+          "EntityType",
+          "Enum",
+          "KnowledgeGraph",
+          "KnowledgeGraphBuilder",
+          "List",
+          "Optional",
+          "Relation",
+          "RelationType",
+          "Set",
+          "Tuple",
+          "dataclass",
+          "datetime",
+          "field",
+          "get_knowledge_graph_builder",
+          "get_logger"
+        ]
+      },
+      "app.services.intelligent_agent": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\intelligent_agent.py",
+        "classes": [
+          "ABC",
+          "AgentOrchestrator",
+          "AgentResult",
+          "AgentResults",
+          "AgentStatus",
+          "AgentType",
+          "Any",
+          "BaseMedicalAgent",
+          "DiagnosisAgent",
+          "Dict",
+          "Enum",
+          "FallbackStrategy",
+          "List",
+          "Optional",
+          "ProcessingStrategy",
+          "RelevantContent",
+          "TreatmentAgent",
+          "Tuple"
+        ],
+        "functions": [
+          "ABC",
+          "AgentOrchestrator",
+          "AgentResult",
+          "AgentResults",
+          "AgentStatus",
+          "AgentType",
+          "Any",
+          "BaseMedicalAgent",
+          "DiagnosisAgent",
+          "Dict",
+          "Enum",
+          "FallbackStrategy",
+          "List",
+          "Optional",
+          "ProcessingStrategy",
+          "RelevantContent",
+          "TreatmentAgent",
+          "Tuple",
+          "abstractmethod",
+          "dataclass",
+          "datetime",
+          "field",
+          "get_agent_orchestrator",
+          "get_logger",
+          "process_medical_content"
+        ]
+      },
+      "app.services.medical_agents": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\medical_agents.py",
+        "classes": [
+          "AgentResult",
+          "AgentStatus",
+          "AgentType",
+          "Any",
+          "BaseMedicalAgent",
+          "DiagnosisAgent",
+          "Dict",
+          "List",
+          "MonitoringAgent",
+          "PreventionAgent",
+          "RelevantContent",
+          "SpecialPopulationsAgent",
+          "TreatmentAgent"
+        ],
+        "functions": [
+          "AgentResult",
+          "AgentStatus",
+          "AgentType",
+          "Any",
+          "BaseMedicalAgent",
+          "DiagnosisAgent",
+          "Dict",
+          "List",
+          "MonitoringAgent",
+          "PreventionAgent",
+          "RelevantContent",
+          "SpecialPopulationsAgent",
+          "TreatmentAgent",
+          "create_medical_agent",
+          "datetime",
+          "get_logger"
+        ]
+      },
+      "app.services.agent_orchestrator": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\agent_orchestrator.py",
+        "classes": [
+          "AgentOrchestrator",
+          "AgentResult",
+          "AgentStatus",
+          "AgentType",
+          "Any",
+          "Dict",
+          "List",
+          "Optional",
+          "ProcessingStrategy"
+        ],
+        "functions": [
+          "AgentOrchestrator",
+          "AgentResult",
+          "AgentStatus",
+          "AgentType",
+          "Any",
+          "Dict",
+          "List",
+          "Optional",
+          "ProcessingStrategy",
+          "create_medical_agent",
+          "datetime",
+          "get_agent_orchestrator",
+          "get_logger",
+          "orchestrate_medical_analysis"
+        ]
+      },
+      "celery_worker.workflow.base_node": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\celery_worker\\workflow\\base_node.py",
+        "classes": [
+          "ABC",
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "Enum",
+          "List",
+          "NodeContext",
+          "NodeExecutionError",
+          "NodePriority",
+          "NodeResult",
+          "NodeStatus",
+          "NodeTimeoutError",
+          "NodeValidationError",
+          "Optional",
+          "WorkflowError"
+        ],
+        "functions": [
+          "ABC",
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "Enum",
+          "List",
+          "NodeContext",
+          "NodeExecutionError",
+          "NodePriority",
+          "NodeResult",
+          "NodeStatus",
+          "NodeTimeoutError",
+          "NodeValidationError",
+          "Optional",
+          "WorkflowError",
+          "abstractmethod",
+          "create_node_context",
+          "dataclass",
+          "datetime",
+          "get_logger",
+          "timedelta"
+        ]
+      },
+      "celery_worker.workflow_nodes.node1_medical_parser": {
+        "status": "failed",
+        "error": "No module named 'transformers'",
+        "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\scripts\\system_compatibility_check_ascii.py\", line 108, in _check_import_compatibility\n    module = importlib.import_module(module_name)\n  File \"D:\\py39\\lib\\importlib\\__init__.py\", line 127, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n  File \"<frozen importlib._bootstrap>\", line 1030, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1007, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 986, in _find_and_load_unlocked\n  File \"<frozen importlib._bootstrap>\", line 680, in _load_unlocked\n  File \"<frozen importlib._bootstrap_external>\", line 850, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 228, in _call_with_frames_removed\n  File \"C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\celery_worker\\workflow_nodes\\node1_medical_parser.py\", line 22, in <module>\n    from app.services.medical_parser import (\n  File \"C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\app\\services\\medical_parser.py\", line 9, in <module>\n    from transformers import AutoTokenizer\nModuleNotFoundError: No module named 'transformers'\n"
+      },
+      "celery_worker.workflow_nodes.node2_multimodal_processor": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\celery_worker\\workflow_nodes\\node2_multimodal_processor.py",
+        "classes": [
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "List",
+          "MultimodalProcessorNode"
+        ],
+        "functions": [
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "List",
+          "MultimodalProcessorNode",
+          "create_node",
+          "get_db",
+          "get_logger"
+        ]
+      },
+      "celery_worker.workflow_nodes.node3_knowledge_graph": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\celery_worker\\workflow_nodes\\node3_knowledge_graph.py",
+        "classes": [
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "KnowledgeGraphNode",
+          "List"
+        ],
+        "functions": [
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "KnowledgeGraphNode",
+          "List",
+          "create_node",
+          "get_db",
+          "get_logger"
+        ]
+      },
+      "celery_worker.workflow_nodes.node4_intelligent_agents": {
+        "status": "success",
+        "file_path": "C:\\Users\\Lenovo\\Desktop\\my_project\\cpg2pvg-ai\\backend\\celery_worker\\workflow_nodes\\node4_intelligent_agents.py",
+        "classes": [
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "IntelligentAgentsNode",
+          "List"
+        ],
+        "functions": [
+          "Any",
+          "BaseWorkflowNode",
+          "Dict",
+          "IntelligentAgentsNode",
+          "List",
+          "create_node",
+          "get_db",
+          "get_logger"
+        ]
+      }
+    }
+  },
+  "module_dependencies": {
+    "total_modules": 106,
+    "dependency_graph": {
+      "alembic.env": {
+        "file_path": "alembic\\env.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "alembic",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 7
+      },
+      "app.main": {
+        "file_path": "app\\main.py",
+        "imports": [
+          "fastapi",
+          "fastapi",
+          "contextlib",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 7
+      },
+      "app": {
+        "file_path": "app\\__init__.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "app.api.v1.api": {
+        "file_path": "app\\api\\v1\\api.py",
+        "imports": [
+          "fastapi",
+          "app"
+        ],
+        "dependency_count": 2
+      },
+      "app.api.v1.endpoints.guidelines": {
+        "file_path": "app\\api\\v1\\endpoints\\guidelines.py",
+        "imports": [
+          "fastapi",
+          "sqlalchemy",
+          "sqlalchemy",
+          "app",
+          "app",
+          "app",
+          "sqlalchemy"
+        ],
+        "dependency_count": 7
+      },
+      "app.api.v1.endpoints.health": {
+        "file_path": "app\\api\\v1\\endpoints\\health.py",
+        "imports": [
+          "fastapi",
+          "sqlalchemy",
+          "redis",
+          "app",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "app.api.v1.endpoints.tasks": {
+        "file_path": "app\\api\\v1\\endpoints\\tasks.py",
+        "imports": [
+          "fastapi",
+          "sqlalchemy",
+          "sqlalchemy",
+          "fastapi",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 8
+      },
+      "app.api.v1.endpoints.users": {
+        "file_path": "app\\api\\v1\\endpoints\\users.py",
+        "imports": [
+          "fastapi",
+          "sqlalchemy",
+          "sqlalchemy",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 7
+      },
+      "app.api.v1.endpoints": {
+        "file_path": "app\\api\\v1\\endpoints\\__init__.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "app.core.celery_app": {
+        "file_path": "app\\core\\celery_app.py",
+        "imports": [
+          "celery",
+          "celery",
+          "kombu",
+          "app",
+          "app",
+          "app",
+          "app",
+          "celery",
+          "celery"
+        ],
+        "dependency_count": 9
+      },
+      "app.core.config": {
+        "file_path": "app\\core\\config.py",
+        "imports": [
+          "pydantic_settings",
+          "pydantic",
+          "functools"
+        ],
+        "dependency_count": 3
+      },
+      "app.core.database": {
+        "file_path": "app\\core\\database.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "contextlib",
+          "redis",
+          "sqlalchemy",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 10
+      },
+      "app.core.llm_client": {
+        "file_path": "app\\core\\llm_client.py",
+        "imports": [
+          "httpx",
+          "app"
+        ],
+        "dependency_count": 2
+      },
+      "app.core.llm_config": {
+        "file_path": "app\\core\\llm_config.py",
+        "imports": [
+          "app",
+          "app"
+        ],
+        "dependency_count": 2
+      },
+      "app.core.logger": {
+        "file_path": "app\\core\\logger.py",
+        "imports": [
+          "traceback",
+          "threading",
+          "structlog",
+          "pythonjsonlogger",
+          "app",
+          "colorlog"
+        ],
+        "dependency_count": 6
+      },
+      "app.core.redis_client": {
+        "file_path": "app\\core\\redis_client.py",
+        "imports": [
+          "pickle",
+          "redis",
+          "functools",
+          "app"
+        ],
+        "dependency_count": 4
+      },
+      "app.core.security": {
+        "file_path": "app\\core\\security.py",
+        "imports": [
+          "hashlib",
+          "secrets",
+          "fastapi",
+          "fastapi",
+          "jose",
+          "passlib",
+          "redis",
+          "app",
+          "app"
+        ],
+        "dependency_count": 9
+      },
+      "app.core": {
+        "file_path": "app\\core\\__init__.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "app.models.base": {
+        "file_path": "app\\models\\base.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy"
+        ],
+        "dependency_count": 3
+      },
+      "app.models.guideline": {
+        "file_path": "app\\models\\guideline.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.models.intelligent_agent": {
+        "file_path": "app\\models\\intelligent_agent.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "app.models.knowledge_graph": {
+        "file_path": "app\\models\\knowledge_graph.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "app.models.medical_document": {
+        "file_path": "app\\models\\medical_document.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 4
+      },
+      "app.models.multimodal_content": {
+        "file_path": "app\\models\\multimodal_content.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "app.models.processing_result": {
+        "file_path": "app\\models\\processing_result.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.models.task": {
+        "file_path": "app\\models\\task.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.models.task_progress": {
+        "file_path": "app\\models\\task_progress.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.models.user": {
+        "file_path": "app\\models\\user.py",
+        "imports": [
+          "sqlalchemy",
+          "sqlalchemy",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.models": {
+        "file_path": "app\\models\\__init__.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 6
+      },
+      "app.schemas.guideline": {
+        "file_path": "app\\schemas\\guideline.py",
+        "imports": [
+          "pydantic"
+        ],
+        "dependency_count": 1
+      },
+      "app.schemas.task": {
+        "file_path": "app\\schemas\\task.py",
+        "imports": [
+          "pydantic"
+        ],
+        "dependency_count": 1
+      },
+      "app.schemas.user": {
+        "file_path": "app\\schemas\\user.py",
+        "imports": [
+          "pydantic"
+        ],
+        "dependency_count": 1
+      },
+      "app.schemas": {
+        "file_path": "app\\schemas\\__init__.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "app.services.agent_orchestrator": {
+        "file_path": "app\\services\\agent_orchestrator.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 4
+      },
+      "app.services.file_storage": {
+        "file_path": "app\\services\\file_storage.py",
+        "imports": [
+          "hashlib",
+          "io",
+          "mimetypes",
+          "urllib",
+          "aiofiles",
+          "minio",
+          "minio",
+          "aiofiles",
+          "app",
+          "app"
+        ],
+        "dependency_count": 10
+      },
+      "app.services.intelligent_agent": {
+        "file_path": "app\\services\\intelligent_agent.py",
+        "imports": [
+          "app"
+        ],
+        "dependency_count": 1
+      },
+      "app.services.knowledge_graph": {
+        "file_path": "app\\services\\knowledge_graph.py",
+        "imports": [
+          "app"
+        ],
+        "dependency_count": 1
+      },
+      "app.services.medical_agents": {
+        "file_path": "app\\services\\medical_agents.py",
+        "imports": [
+          "app",
+          "app"
+        ],
+        "dependency_count": 2
+      },
+      "app.services.medical_parser": {
+        "file_path": "app\\services\\medical_parser.py",
+        "imports": [
+          "transformers",
+          "spacy",
+          "io",
+          "nltk",
+          "PyPDF2",
+          "docx",
+          "hashlib",
+          "nltk",
+          "pdfplumber",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 13
+      },
+      "app.services.minio_setup": {
+        "file_path": "app\\services\\minio_setup.py",
+        "imports": [
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.services.multimodal_processor": {
+        "file_path": "app\\services\\multimodal_processor.py",
+        "imports": [
+          "app"
+        ],
+        "dependency_count": 1
+      },
+      "app.services.multimodal_processor_algorithms": {
+        "file_path": "app\\services\\multimodal_processor_algorithms.py",
+        "imports": [
+          "",
+          ""
+        ],
+        "dependency_count": 2
+      },
+      "app.services.multimodal_processor_impl": {
+        "file_path": "app\\services\\multimodal_processor_impl.py",
+        "imports": [
+          "",
+          ""
+        ],
+        "dependency_count": 2
+      },
+      "app.services.multimodal_processor_tables": {
+        "file_path": "app\\services\\multimodal_processor_tables.py",
+        "imports": [
+          "",
+          ""
+        ],
+        "dependency_count": 2
+      },
+      "app.utils.mock_spacy": {
+        "file_path": "app\\utils\\mock_spacy.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "app.workflows.base": {
+        "file_path": "app\\workflows\\base.py",
+        "imports": [
+          "psutil",
+          "traceback",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.types": {
+        "file_path": "app\\workflows\\types.py",
+        "imports": [
+          "pydantic"
+        ],
+        "dependency_count": 1
+      },
+      "app.workflows": {
+        "file_path": "app\\workflows\\__init__.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "app.workflows.slow_mode.agent_system": {
+        "file_path": "app\\workflows\\slow_mode\\agent_system.py",
+        "imports": [
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.slow_mode.cache_system": {
+        "file_path": "app\\workflows\\slow_mode\\cache_system.py",
+        "imports": [
+          "hashlib",
+          "pickle",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "app.workflows.slow_mode.content_generator": {
+        "file_path": "app\\workflows\\slow_mode\\content_generator.py",
+        "imports": [
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.slow_mode.cost_optimizer": {
+        "file_path": "app\\workflows\\slow_mode\\cost_optimizer.py",
+        "imports": [
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.slow_mode.document_parser": {
+        "file_path": "app\\workflows\\slow_mode\\document_parser.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 4
+      },
+      "app.workflows.slow_mode.knowledge_graph": {
+        "file_path": "app\\workflows\\slow_mode\\knowledge_graph.py",
+        "imports": [
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.slow_mode.multimodal_processor": {
+        "file_path": "app\\workflows\\slow_mode\\multimodal_processor.py",
+        "imports": [
+          "concurrent",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.slow_mode.orchestrator": {
+        "file_path": "app\\workflows\\slow_mode\\orchestrator.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 14
+      },
+      "app.workflows.slow_mode.performance_monitor": {
+        "file_path": "app\\workflows\\slow_mode\\performance_monitor.py",
+        "imports": [
+          "psutil",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 4
+      },
+      "app.workflows.slow_mode.quality_controller": {
+        "file_path": "app\\workflows\\slow_mode\\quality_controller.py",
+        "imports": [
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 3
+      },
+      "app.workflows.slow_mode": {
+        "file_path": "app\\workflows\\slow_mode\\__init__.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "celery_worker.workflow.base_node": {
+        "file_path": "celery_worker\\workflow\\base_node.py",
+        "imports": [
+          "app"
+        ],
+        "dependency_count": 1
+      },
+      "celery_worker.workflow_nodes.node1_medical_parser": {
+        "file_path": "celery_worker\\workflow_nodes\\node1_medical_parser.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 5
+      },
+      "celery_worker.workflow_nodes.node2_multimodal_processor": {
+        "file_path": "celery_worker\\workflow_nodes\\node2_multimodal_processor.py",
+        "imports": [
+          "app",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 3
+      },
+      "celery_worker.workflow_nodes.node3_knowledge_graph": {
+        "file_path": "celery_worker\\workflow_nodes\\node3_knowledge_graph.py",
+        "imports": [
+          "app",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 3
+      },
+      "celery_worker.workflow_nodes.node4_intelligent_agents": {
+        "file_path": "celery_worker\\workflow_nodes\\node4_intelligent_agents.py",
+        "imports": [
+          "app",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 3
+      },
+      "examples.medical_parser_usage": {
+        "file_path": "examples\\medical_parser_usage.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "tempfile",
+          "celery_worker",
+          "traceback"
+        ],
+        "dependency_count": 6
+      },
+      "scripts.check_compatibility_simple": {
+        "file_path": "scripts\\check_compatibility_simple.py",
+        "imports": [
+          "app",
+          "celery_worker",
+          "traceback"
+        ],
+        "dependency_count": 3
+      },
+      "scripts.check_system_compatibility": {
+        "file_path": "scripts\\check_system_compatibility.py",
+        "imports": [
+          "app",
+          "app",
+          "celery_worker",
+          "celery_worker",
+          "celery_worker",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "traceback"
+        ],
+        "dependency_count": 11
+      },
+      "scripts.code_quality_analyzer": {
+        "file_path": "scripts\\code_quality_analyzer.py",
+        "imports": [
+          "ast"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.comprehensive_code_analysis": {
+        "file_path": "scripts\\comprehensive_code_analysis.py",
+        "imports": [
+          "ast",
+          "traceback"
+        ],
+        "dependency_count": 2
+      },
+      "scripts.comprehensive_code_quality_check": {
+        "file_path": "scripts\\comprehensive_code_quality_check.py",
+        "imports": [
+          "ast",
+          "traceback"
+        ],
+        "dependency_count": 2
+      },
+      "scripts.comprehensive_indentation_fix": {
+        "file_path": "scripts\\comprehensive_indentation_fix.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.comprehensive_system_compatibility_check": {
+        "file_path": "scripts\\comprehensive_system_compatibility_check.py",
+        "imports": [
+          "importlib",
+          "traceback",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 4
+      },
+      "scripts.download_nlp_models": {
+        "file_path": "scripts\\download_nlp_models.py",
+        "imports": [
+          "nltk",
+          "spacy",
+          "transformers",
+          "requests",
+          "shutil"
+        ],
+        "dependency_count": 5
+      },
+      "scripts.final_quality_check": {
+        "file_path": "scripts\\final_quality_check.py",
+        "imports": [
+          "ast"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.fix_agents_validation": {
+        "file_path": "scripts\\fix_agents_validation.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_class_keywords": {
+        "file_path": "scripts\\fix_class_keywords.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_encoding": {
+        "file_path": "scripts\\fix_encoding.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_indentation": {
+        "file_path": "scripts\\fix_indentation.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_indentation_comprehensive": {
+        "file_path": "scripts\\fix_indentation_comprehensive.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_long_lines": {
+        "file_path": "scripts\\fix_long_lines.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_service_modules": {
+        "file_path": "scripts\\fix_service_modules.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.fix_workflow_nodes": {
+        "file_path": "scripts\\fix_workflow_nodes.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.generate_final_quality_report": {
+        "file_path": "scripts\\generate_final_quality_report.py",
+        "imports": [
+          "traceback"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.optimize_code_formatting": {
+        "file_path": "scripts\\optimize_code_formatting.py",
+        "imports": [
+          "traceback"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.quick_syntax_fix": {
+        "file_path": "scripts\\quick_syntax_fix.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.refactor_large_components": {
+        "file_path": "scripts\\refactor_large_components.py",
+        "imports": [
+          "ast",
+          "app",
+          "app",
+          "",
+          "app",
+          "",
+          "app",
+          "",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "traceback"
+        ],
+        "dependency_count": 14
+      },
+      "scripts.rewrite_workflow_nodes": {
+        "file_path": "scripts\\rewrite_workflow_nodes.py",
+        "imports": [
+          "app",
+          "app",
+          "celery_worker",
+          "app",
+          "app",
+          "celery_worker",
+          "app",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 9
+      },
+      "scripts.setup_complete_system": {
+        "file_path": "scripts\\setup_complete_system.py",
+        "imports": [
+          "subprocess",
+          "app",
+          "app",
+          "redis",
+          "app",
+          "redis",
+          "argparse"
+        ],
+        "dependency_count": 7
+      },
+      "scripts.setup_file_storage": {
+        "file_path": "scripts\\setup_file_storage.py",
+        "imports": [
+          "app"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.setup_llm_providers": {
+        "file_path": "scripts\\setup_llm_providers.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 4
+      },
+      "scripts.setup_logging": {
+        "file_path": "scripts\\setup_logging.py",
+        "imports": [
+          "app",
+          "app"
+        ],
+        "dependency_count": 2
+      },
+      "scripts.setup_security": {
+        "file_path": "scripts\\setup_security.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "secrets",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "scripts.simple_line_fix": {
+        "file_path": "scripts\\simple_line_fix.py",
+        "imports": [],
+        "dependency_count": 0
+      },
+      "scripts.simple_quality_analyzer": {
+        "file_path": "scripts\\simple_quality_analyzer.py",
+        "imports": [
+          "ast"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.simple_quality_check": {
+        "file_path": "scripts\\simple_quality_check.py",
+        "imports": [
+          "ast"
+        ],
+        "dependency_count": 1
+      },
+      "scripts.system_compatibility_check_ascii": {
+        "file_path": "scripts\\system_compatibility_check_ascii.py",
+        "imports": [
+          "importlib",
+          "traceback",
+          "app",
+          "celery_worker"
+        ],
+        "dependency_count": 4
+      },
+      "scripts.test_architecture_validation": {
+        "file_path": "scripts\\test_architecture_validation.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "celery_worker",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "traceback"
+        ],
+        "dependency_count": 24
+      },
+      "scripts.test_complete_workflow": {
+        "file_path": "scripts\\test_complete_workflow.py",
+        "imports": [
+          "celery_worker",
+          "celery_worker",
+          "celery_worker",
+          "celery_worker",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "scripts.test_core_services": {
+        "file_path": "scripts\\test_core_services.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 7
+      },
+      "scripts.test_core_services_ascii": {
+        "file_path": "scripts\\test_core_services_ascii.py",
+        "imports": [
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 8
+      },
+      "scripts.test_kg_basic": {
+        "file_path": "scripts\\test_kg_basic.py",
+        "imports": [
+          "app",
+          "traceback",
+          "app",
+          "traceback",
+          "celery_worker",
+          "traceback"
+        ],
+        "dependency_count": 6
+      },
+      "scripts.test_kg_minimal": {
+        "file_path": "scripts\\test_kg_minimal.py",
+        "imports": [
+          "app",
+          "app",
+          "celery_worker",
+          "traceback",
+          "app",
+          "traceback",
+          "celery_worker",
+          "traceback"
+        ],
+        "dependency_count": 8
+      },
+      "scripts.test_knowledge_graph": {
+        "file_path": "scripts\\test_knowledge_graph.py",
+        "imports": [
+          "app",
+          "app",
+          "traceback",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app",
+          "app"
+        ],
+        "dependency_count": 9
+      },
+      "scripts.test_knowledge_graph_simple": {
+        "file_path": "scripts\\test_knowledge_graph_simple.py",
+        "imports": [
+          "app",
+          "app",
+          "traceback",
+          "app",
+          "app"
+        ],
+        "dependency_count": 5
+      },
+      "scripts.test_medical_parser": {
+        "file_path": "scripts\\test_medical_parser.py",
+        "imports": [
+          "app",
+          "app"
+        ],
+        "dependency_count": 2
+      },
+      "scripts.test_multimodal_processor": {
+        "file_path": "scripts\\test_multimodal_processor.py",
+        "imports": [
+          "app",
+          "app",
+          "traceback",
+          "app"
+        ],
+        "dependency_count": 4
+      }
+    },
+    "circular_dependencies": []
+  },
+  "data_model_consistency": {
+    "base_model": {
+      "status": "available",
+      "class": "Base"
+    },
+    "knowledge_graph": {
+      "status": "available",
+      "models": [
+        "ClinicalContextModel",
+        "ClinicalRelationshipModel",
+        "EnhancedContentModel",
+        "KnowledgeGraphCacheModel",
+        "KnowledgeGraphJobModel",
+        "MedicalEntityModel",
+        "OntologyConceptModel",
+        "OntologyMatchModel",
+        "OntologyRelationshipModel",
+        "SemanticIndexModel"
+      ],
+      "model_count": 10
+    },
+    "intelligent_agent": {
+      "status": "available",
+      "models": [
+        "AgentCoordinationModel",
+        "AgentFallbackModel",
+        "AgentJobModel",
+        "AgentPerformanceModel",
+        "AgentResultModel",
+        "AgentTemplateModel"
+      ],
+      "model_count": 6
+    },
+    "medical_document": {
+      "status": "available",
+      "models": [
+        "ClinicalAlgorithmModel",
+        "DocumentChunkModel",
+        "DocumentSectionModel",
+        "EvidenceHierarchyModel",
+        "MedicalDocumentModel",
+        "MedicalEntityModel",
+        "MedicalTableModel"
+      ],
+      "model_count": 7
+    },
+    "multimodal_content": {
+      "status": "available",
+      "models": [
+        "ContentCacheModel",
+        "ContentIndexModel",
+        "CrossModalRelationshipModel",
+        "ProcessedAlgorithmModel",
+        "ProcessedContentModel",
+        "ProcessedTableModel",
+        "ProcessingJobModel",
+        "TextProcessingResultModel"
+      ],
+      "model_count": 8
+    }
+  },
+  "workflow_connectivity": {
+    "base_node": {
+      "status": "available",
+      "class": "BaseWorkflowNode"
+    },
+    "node1": {
+      "status": "failed",
+      "module": "celery_worker.workflow_nodes.node1_medical_parser",
+      "error": "No module named 'transformers'"
+    },
+    "node2": {
+      "status": "available",
+      "module": "celery_worker.workflow_nodes.node2_multimodal_processor",
+      "classes": [
+        "BaseWorkflowNode",
+        "MultimodalProcessorNode"
+      ]
+    },
+    "node3": {
+      "status": "available",
+      "module": "celery_worker.workflow_nodes.node3_knowledge_graph",
+      "classes": [
+        "BaseWorkflowNode",
+        "KnowledgeGraphNode"
+      ]
+    },
+    "node4": {
+      "status": "available",
+      "module": "celery_worker.workflow_nodes.node4_intelligent_agents",
+      "classes": [
+        "BaseWorkflowNode",
+        "IntelligentAgentsNode"
+      ]
+    }
+  },
+  "configuration_conflicts": {
+    "app/core/config.py": {
+      "status": "available",
+      "elements": 14,
+      "module_path": "app.core.config"
+    },
+    "app/core/database.py": {
+      "status": "available",
+      "elements": 32,
+      "module_path": "app.core.database"
+    },
+    "app/core/logger.py": {
+      "status": "available",
+      "elements": 38,
+      "module_path": "app.core.logger"
+    },
+    "environment_variables": {
+      "DATABASE_URL": null,
+      "REDIS_URL": null,
+      "LOG_LEVEL": null,
+      "DEBUG": null
+    }
+  },
+  "overall_compatibility": 93.0,
+  "issues_found": [
+    {
+      "type": "import_error",
+      "module": "app.services.medical_parser",
+      "error": "No module named 'transformers'"
+    },
+    {
+      "type": "import_error",
+      "module": "celery_worker.workflow_nodes.node1_medical_parser",
+      "error": "No module named 'transformers'"
+    },
+    {
+      "type": "workflow_node_error",
+      "node": "node1",
+      "error": "No module named 'transformers'"
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "Critical",
+      "description": "Fix import errors and model issues",
+      "actions": [
+        "Review missing dependencies",
+        "Check file paths",
+        "Verify module structure"
+      ]
+    },
+    {
+      "category": "Improvement",
+      "description": "System is compatible, consider optimization",
+      "actions": [
+        "Add comprehensive tests",
+        "Implement performance monitoring",
+        "Document API"
+      ]
+    }
+  ]
+}

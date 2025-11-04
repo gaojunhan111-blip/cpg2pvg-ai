@@ -1,0 +1,303 @@
+# Kustomize configuration for CPG2PVG-AI Kubernetes deployment
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: cpg2pvg-ai-kustomization
+  namespace: cpg2pvg-ai
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+resources:
+  # Namespace and Core Configuration
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+
+  # Storage Infrastructure
+  - storage.yaml
+  - storage-monitoring.yaml
+
+  # Application Services
+  - postgres.yaml
+  - redis.yaml
+  - minio.yaml
+  - backend.yaml
+  - frontend.yaml
+  - celery-worker.yaml
+
+  # Networking
+  - ingress.yaml
+
+  # Monitoring and Observability
+  - monitoring.yaml
+  - monitoring-configs.yaml
+
+# Common labels to be applied to all resources
+commonLabels:
+  app.kubernetes.io/name: cpg2pvg-ai
+  app.kubernetes.io/part-of: cpg2pvg-ai
+  app.kubernetes.io/managed-by: kustomize
+  version: v1.0.0
+
+# Common annotations to be applied to all resources
+commonAnnotations:
+  config.kubernetes.io/origin: cpg2pvg-ai-kustomization
+  config.kubernetes.io/namespace: cpg2pvg-ai
+
+# Replicas configuration
+replicas:
+  - name: backend
+    count: 3
+  - name: frontend
+    count: 3
+  - name: celery-worker
+    count: 4
+  - name: redis
+    count: 1
+  - name: postgres
+    count: 1
+  - name: minio
+    count: 1
+  - name: prometheus
+    count: 1
+  - name: grafana
+    count: 1
+  - name: alertmanager
+    count: 1
+
+# Images configuration with version management
+images:
+  - name: cpg2pvg-ai/backend
+    newTag: v1.0.0
+  - name: cpg2pvg-ai/frontend
+    newTag: v1.0.0
+  - name: cpg2pvg-ai/celery-worker
+    newTag: v1.0.0
+  - name: postgres
+    newTag: 15-alpine
+  - name: redis
+    newTag: 7-alpine
+  - name: minio/minio
+    newTag: latest
+  - name: prom/prometheus
+    newTag: latest
+  - name: grafana/grafana
+    newTag: latest
+  - name: prom/alertmanager
+    newTag: latest
+
+# Patches for environment-specific configurations
+patchesStrategicMerge:
+  # Development environment patches
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: backend
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backend
+              env:
+                - name: DEBUG
+                  value: "true"
+                - name: LOG_LEVEL
+                  value: "DEBUG"
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+
+  # Production environment patches
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: backend
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backend
+              env:
+                - name: DEBUG
+                  value: "false"
+                - name: LOG_LEVEL
+                  value: "INFO"
+              resources:
+                requests:
+                  memory: "1Gi"
+                  cpu: "500m"
+                limits:
+                  memory: "2Gi"
+                  cpu: "1"
+
+# ConfigMap and Secret generators
+configMapGenerator:
+  - name: cpg2pvg-ai-env-config
+    literals:
+      - ENVIRONMENT=production
+      - VERSION=v1.0.0
+      - DEPLOYMENT_DATE=$(date +%Y-%m-%d)
+
+secretGenerator:
+  - name: cpg2pvg-ai-generated-secrets
+    literals:
+      - GENERATED_AT=$(date +%Y-%m-%dT%H:%M:%S)
+
+# Namespace for all resources
+namespace: cpg2pvg-ai
+
+# Options for resource ordering and dependencies
+resources:
+# Core infrastructure first
+- namespace.yaml
+- configmap.yaml
+- secrets.yaml
+
+# Storage layer
+- storage.yaml
+
+# Data services
+- postgres.yaml
+- redis.yaml
+- minio.yaml
+
+# Application services
+- backend.yaml
+- celery-worker.yaml
+- frontend.yaml
+
+# Monitoring and observability
+- monitoring.yaml
+- monitoring-configs.yaml
+- storage-monitoring.yaml
+
+# Networking and ingress
+- ingress.yaml
+
+# Patches for different environments
+patches:
+  # Development environment specific patches
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0
+        value:
+          name: DEBUG
+          value: "true"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+  # Production environment specific patches
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0
+        value:
+          name: DEBUG
+          value: "false"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+
+# Custom fields for additional metadata
+vars:
+  - name: NAMESPACE
+    objref:
+      kind: Namespace
+      name: cpg2pvg-ai
+    fieldref:
+      fieldpath: metadata.name
+
+# Customization options
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  - transformerAnnotations
+
+# Validation and testing configurations
+validation:
+  - name: validate-pod-restart-policy
+    pattern: 'spec.template.spec.restartPolicy=Always'
+  - name: validate-resource-requests
+    pattern: 'spec.template.spec.containers[*].resources.requests'
+
+# Transformer configurations
+transformers:
+  - |-
+    apiVersion: builtin
+    kind: NamespaceTransformer
+    metadata:
+      name: namespace-transformer
+    namespace: cpg2pvg-ai
+
+# Generators for dynamic resources
+generators:
+  - |-
+    apiVersion: builtin
+    kind: ConfigMapGenerator
+    metadata:
+      name: build-info
+    literals:
+      - BUILD_TIME=$(date +%Y-%m-%dT%H:%M:%S)
+      - KUSTOMIZE_VERSION=kustomize/v3.8.7
+      - GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
+# Helm chart compatibility markers
+helmGlobals:
+  chartHome: ./charts
+  chartHook: false
+
+helmChartInflationGenerator:
+  - chartName: ingress-nginx
+    chartRepo: https://kubernetes.github.io/ingress-nginx
+    chartVersion: "4.0.0"
+    releaseName: ingress-nginx
+    namespace: ingress-nginx
+    valuesInline:
+      controller:
+        replicaCount: 2
+        nodeSelector:
+          kubernetes.io/os: linux
+
+# Override files for different environments
+patchesJson6902:
+  - target:
+      version: v1
+      kind: Service
+      name: backend-service
+    patch: |-
+      - op: add
+        path: /metadata/annotations/load-balancer
+        value: "internal"
+
+# Custom resource definitions
+crds:
+  - https://github.com/prometheus-operator/prometheus-operator/releases/download/v0.57.0/bundle.yaml
+
+# Additional configuration files
+configurations:
+  - kustomizeconfig.yaml

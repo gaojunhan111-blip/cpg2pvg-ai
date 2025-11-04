@@ -1,0 +1,350 @@
+---
+# Resource Limits and Requests for CPG2PVG-AI
+# This file defines comprehensive resource management for all pods
+
+---
+# Namespace Resource Quota
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cpg2pvg-ai-quota
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: resource-quota
+    app.kubernetes.io/component: limits
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
+    persistentvolumeclaims: "10"
+    pods: "50"
+    services: "20"
+    secrets: "20"
+    configmaps: "20"
+    count/deployments.apps: "15"
+    count/replicasets.apps: "20"
+
+---
+# Limit Range for default resource requests/limits
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpg2pvg-ai-limits
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: limit-range
+    app.kubernetes.io/component: defaults
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  limits:
+    - default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      type: Container
+    - max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: 50m
+        memory: 64Mi
+      type: Container
+    - max:
+        storage: 1Ti
+      min:
+        storage: 1Gi
+      type: PersistentVolumeClaim
+
+---
+# Pod Priority Classes
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+  labels:
+    app.kubernetes.io/name: priority-class
+    app.kubernetes.io/component: scheduling
+    app.kubernetes.io/part-of: cpg2pvg-ai
+value: 1000
+globalDefault: false
+description: "High priority class for critical services"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: medium-priority
+  labels:
+    app.kubernetes.io/name: priority-class
+    app.kubernetes.io/component: scheduling
+    app.kubernetes.io/part-of: cpg2pvg-ai
+value: 500
+globalDefault: true
+description: "Medium priority class for regular services"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: low-priority
+  labels:
+    app.kubernetes.io/name: priority-class
+    app.kubernetes.io/component: scheduling
+    app.kubernetes.io/part-of: cpg2pvg-ai
+value: 100
+globalDefault: false
+description: "Low priority class for batch jobs and background tasks"
+
+---
+# Enhanced Resource Limits for StatefulSets
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-enhanced
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  template:
+    spec:
+      containers:
+        - name: postgres
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1000m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+              resources:
+                limits:
+                  memory: "100Mi"
+        - name: postgres-exporter
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+# Resource-optimized Deployment Patches
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-optimized
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: app-uploads
+              mountPath: /app/uploads
+              resources:
+                limits:
+                  memory: "100Mi"
+            - name: app-outputs
+              mountPath: /app/outputs
+              resources:
+                limits:
+                  memory: "100Mi"
+      initContainers:
+        - name: wait-for-db
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+# Horizontal Pod Autoscaler Metrics
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa-enhanced
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: autoscaling
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: 100
+    - type: External
+      external:
+        metric:
+          name: redis_memory_usage
+        target:
+          type: AverageValue
+          averageValue: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+
+---
+# Vertical Pod Autoscaler
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: backend-vpa
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: autoscaling
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: backend
+        maxAllowed:
+          cpu: 2
+          memory: 4Gi
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+
+---
+# Custom Metrics API Service Monitor
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-metrics-service
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: custom-metrics
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app.kubernetes.io/name: custom-metrics
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: metrics
+
+---
+# Resource Monitoring Dashboard
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-monitoring-config
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: monitoring
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: cpg2pvg-ai
+data:
+  resource-usage.json: |
+    {
+      "dashboards": [
+        {
+          "name": "Resource Usage",
+          "panels": [
+            {
+              "title": "CPU Usage by Pod",
+              "type": "graph",
+              "targets": [
+                {
+                  "expr": "rate(container_cpu_usage_seconds_total{namespace=\"cpg2pvg-ai\"}[5m]) * 100",
+                  "legendFormat": "{{pod}}"
+                }
+              ]
+            },
+            {
+              "title": "Memory Usage by Pod",
+              "type": "graph",
+              "targets": [
+                {
+                  "expr": "container_memory_usage_bytes{namespace=\"cpg2pvg-ai\"} / 1024 / 1024",
+                  "legendFormat": "{{pod}}"
+                }
+              ]
+            },
+            {
+              "title": "Pod Count",
+              "type": "stat",
+              "targets": [
+                {
+                  "expr": "count(kube_pod_info{namespace=\"cpg2pvg-ai\"})",
+                  "legendFormat": "Total Pods"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }

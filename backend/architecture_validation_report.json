@@ -1,0 +1,64 @@
+{
+  "test_timestamp": "2025-11-03T23:24:58.904946",
+  "total_tests": 6,
+  "passed_tests": 4,
+  "success_rate": 66.66666666666666,
+  "grade": "C",
+  "test_results": {
+    "imports": {
+      "success": false,
+      "error": "name 'BaseMedicalAgent' is not defined"
+    },
+    "database_models": {
+      "success": true,
+      "model_groups": [
+        "knowledge_graph",
+        "intelligent_agent",
+        "medical_document",
+        "multimodal_content"
+      ]
+    },
+    "workflow_nodes": {
+      "success": true,
+      "existing_nodes": [
+        "celery_worker/workflow_nodes/node1_medical_parser.py",
+        "celery_worker/workflow_nodes/node2_multimodal_processor.py",
+        "celery_worker/workflow_nodes/node3_knowledge_graph.py",
+        "celery_worker/workflow_nodes/node4_intelligent_agents.py"
+      ],
+      "total_nodes": 4,
+      "base_node": true
+    },
+    "data_structures": {
+      "success": true,
+      "agent_types": 5,
+      "processing_strategies": 3,
+      "structures": [
+        "RelevantContent",
+        "AgentResult",
+        "AgentResults",
+        "MedicalEntity",
+        "ClinicalRelationship"
+      ]
+    },
+    "service_instantiation": {
+      "success": false,
+      "error": "name 'BaseMedicalAgent' is not defined"
+    },
+    "architecture_integrity": {
+      "success": true,
+      "passed_checks": 6,
+      "total_checks": 7,
+      "success_rate": 0.8571428571428571,
+      "component_status": {
+        "medical_parser_service": true,
+        "multimodal_processor_service": true,
+        "knowledge_graph_service": true,
+        "agent_orchestrator_service": false,
+        "medical_agents": true,
+        "database_models": true,
+        "workflow_nodes": true
+      }
+    }
+  }
+}

@@ -1,0 +1,581 @@
+---
+# Open Policy Agent (OPA) Gatekeeper Configuration for CPG2PVG-AI
+# Implements Policy as Code for Kubernetes admission control
+
+---
+# OPA Gatekeeper Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gatekeeper-system
+  labels:
+    name: gatekeeper-system
+    app.kubernetes.io/name: gatekeeper
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+
+---
+# Gatekeeper Installation
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: gatekeeper
+  namespace: gatekeeper-system
+  labels:
+    app.kubernetes.io/name: gatekeeper
+    app.kubernetes.io/component: admission-controller
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  chart: gatekeeper
+  repo: https://open-policy-agent.github.io/gatekeeper/charts
+  targetNamespace: gatekeeper-system
+  version: "3.13.0"
+  set:
+    # Enable audit
+    audit:
+      enabled: true
+      emitAdmissionEvents: true
+      replicas: 1
+    # Enable violation tracking
+    controllerManager:
+      replicas: 2
+    # Disable validations on the gatekeeper namespace
+    validatingWebhookExemptNamespaces: ["gatekeeper-system", "kube-system"]
+    # Enable mutation webhook for defaulting
+    mutation:
+      enabled: true
+      replicas: 1
+
+---
+# CPG2PVG-AI Security Constraints Template
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8ssecurityconstraints
+  labels:
+    app.kubernetes.io/name: security-constraints
+    app.kubernetes.io/component: policy-template
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sSecurityConstraints
+      validation:
+        # Schema for the constraint
+        openAPIV3Schema:
+          type: object
+          properties:
+            enforcementAction:
+              type: string
+              enum: ["deny", "warn", "dryrun"]
+            exemptions:
+              type: object
+              properties:
+                namespaces:
+                  type: array
+                  items:
+                    type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh/v1beta1
+      rego: |
+        package k8ssecurityconstraints
+
+        violation[{"msg": msg, "details": details}] {
+          # Check for security violations
+          security_violation(input.review, msg, details)
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 1: Check for privileged containers
+          container := input_containers[review]
+          container.securityContext.privileged == true
+          not is_exempt(review, container.image)
+          msg := sprintf("Container %s in pod %s is privileged", [container.name, review.object.metadata.name])
+          details := {"violation_type": "privileged_container", "container": container.name}
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 2: Check for containers running as root
+          container := input_containers[review]
+          container.securityContext.runAsUser == 0
+          not is_exempt(review, container.image)
+          msg := sprintf("Container %s in pod %s runs as root user", [container.name, review.object.metadata.name])
+          details := {"violation_type": "root_user", "container": container.name}
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 3: Check for writable root filesystem
+          container := input_containers[review]
+          container.securityContext.readOnlyRootFilesystem == false
+          not is_exempt(review, container.image)
+          not required_writable_fs(container.image)
+          msg := sprintf("Container %s in pod %s has writable root filesystem", [container.name, review.object.metadata.name])
+          details := {"violation_type": "writable_root_fs", "container": container.name}
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 4: Check for host network access
+          review.object.spec.hostNetwork == true
+          not is_exempt(review, "")
+          msg := sprintf("Pod %s uses host network", [review.object.metadata.name])
+          details := {"violation_type": "host_network", "pod": review.object.metadata.name}
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 5: Check for host PID namespace sharing
+          review.object.spec.hostPID == true
+          not is_exempt(review, "")
+          msg := sprintf("Pod %s shares host PID namespace", [review.object.metadata.name])
+          details := {"violation_type": "host_pid", "pod": review.object.metadata.name}
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 6: Check for host IPC namespace sharing
+          review.object.spec.hostIPC == true
+          not is_exempt(review, "")
+          msg := sprintf("Pod %s shares host IPC namespace", [review.object.metadata.name])
+          details := {"violation_type": "host_ipc", "pod": review.object.metadata.name}
+        }
+
+        security_violation(review, msg, details) {
+          # Rule 7: Check for missing resource limits
+          container := input_containers[review]
+          not has_resource_limits(container)
+          not is_exempt(review, container.image)
+          msg := sprintf("Container %s in pod %s lacks resource limits", [container.name, review.object.metadata.name])
+          details := {"violation_type": "missing_resource_limits", "container": container.name}
+        }
+
+        # Helper functions
+        input_containers(review) = containers {
+          containers := [c | c = review.object.spec.containers[_]]
+        }
+
+        is_exempt(review, image) {
+          exemption := parameters.exemptions
+          review.object.metadata.namespace == exemption.namespaces[_]
+        }
+
+        is_exempt(review, image) {
+          exemption := parameters.exemptions
+          image == exemption.images[_]
+        }
+
+        has_resource_limits(container) {
+          container.resources.limits.cpu
+          container.resources.limits.memory
+        }
+
+        required_writable_fs(image) {
+          # Images that legitimately need writable filesystem
+          required_images := ["postgres", "redis", "minio"]
+          regex.match(sprintf(".*%s.*", [required_images[_]]), image)
+        }
+
+---
+# CPG2PVG-AI Security Constraints
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sSecurityConstraints
+metadata:
+  name: cpg2pvg-security-constraints
+  labels:
+    app.kubernetes.io/name: security-constraints
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+    namespaces: ["cpg2pvg-ai"]
+  parameters:
+    exemptions:
+      namespaces: ["kube-system", "gatekeeper-system"]
+      images: [
+        "k8s.gcr.io/pause",
+        "registry.k8s.io/pause",
+        "quay.io/calico/*",
+        "fluent/*",
+        "coredns/*"
+      ]
+
+---
+# Image Repository Policy Template
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8simagerepository
+  labels:
+    app.kubernetes.io/name: image-repository
+    app.kubernetes.io/component: policy-template
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sImageRepository
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            allowedRepositories:
+              type: array
+              items:
+                type: string
+            enforcementAction:
+              type: string
+              enum: ["deny", "warn", "dryrun"]
+  targets:
+    - target: admission.k8s.gatekeeper.sh/v1beta1
+      rego: |
+        package k8simagerepository
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          image := container.image
+          not allowed_repository(image)
+          msg := sprintf("Image repository %s is not allowed for container %s", [image, container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          image := container.image
+          not allowed_repository(image)
+          msg := sprintf("Image repository %s is not allowed for init container %s", [image, container.name])
+        }
+
+        allowed_repository(image) {
+          repository := split_image_name(image)
+          parameters.allowedRepositories[_] == repository
+        }
+
+        allowed_repository(image) {
+          # Always allow internal registry images
+          startswith(image, "cpg2pvg-ai/")
+        }
+
+        split_image_name(image) = repo {
+          parts := split(image, ":")
+          repo := parts[0]
+        }
+
+---
+# CPG2PVG-AI Image Repository Policy
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sImageRepository
+metadata:
+  name: cpg2pvg-allowed-repositories
+  labels:
+    app.kubernetes.io/name: image-repository
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+    namespaces: ["cpg2pvg-ai"]
+  parameters:
+    allowedRepositories:
+      - "cpg2pvg-ai/backend"
+      - "cpg2pvg-ai/frontend"
+      - "cpg2pvg-ai/celery-worker"
+      - "postgres"
+      - "redis"
+      - "minio/minio"
+      - "prom/prometheus"
+      - "grafana/grafana"
+      - "prom/alertmanager"
+      - "nginx"
+      - "falcosecurity/falco"
+      - "registry.k8s.io"
+      - "k8s.gcr.io"
+
+---
+# Resource Limits Policy Template
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sresourcelimits
+  labels:
+    app.kubernetes.io/name: resource-limits
+    app.kubernetes.io/component: policy-template
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sResourceLimits
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            minCPU:
+              type: string
+            minMemory:
+              type: string
+            maxCPU:
+              type: string
+            maxMemory:
+              type: string
+            enforcementAction:
+              type: string
+              enum: ["deny", "warn", "dryrun"]
+  targets:
+    - target: admission.k8s.gatekeeper.sh/v1beta1
+      rego: |
+        package k8sresourcelimits
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not has_min_resources(container)
+          msg := sprintf("Container %s must have minimum resource requests", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not has_max_resources(container)
+          msg := sprintf("Container %s must have maximum resource limits", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not within_cpu_limits(container)
+          msg := sprintf("Container %s CPU requests/limits are outside allowed range", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not within_memory_limits(container)
+          msg := sprintf("Container %s memory requests/limits are outside allowed range", [container.name])
+        }
+
+        input_containers[container] {
+          container := input.review.object.spec.containers[_]
+        }
+
+        input_containers[container] {
+          container := input.review.object.spec.initContainers[_]
+        }
+
+        has_min_resources(container) {
+          container.resources.requests.cpu
+          container.resources.requests.memory
+        }
+
+        has_max_resources(container) {
+          container.resources.limits.cpu
+          container.resources.limits.memory
+        }
+
+        within_cpu_limits(container) {
+          cpu_requests := to_number(container.resources.requests.cpu)
+          cpu_limits := to_number(container.resources.limits.cpu)
+          min_cpu := to_number(parameters.minCPU)
+          max_cpu := to_number(parameters.maxCPU)
+          cpu_requests >= min_cpu
+          cpu_limits <= max_cpu
+        }
+
+        within_memory_limits(container) {
+          memory_requests := parse_memory(container.resources.requests.memory)
+          memory_limits := parse_memory(container.resources.limits.memory)
+          min_memory := parse_memory(parameters.minMemory)
+          max_memory := parse_memory(parameters.maxMemory)
+          memory_requests >= min_memory
+          memory_limits <= max_memory
+        }
+
+        to_number(str) = num {
+          is_number(str)
+          num := tonumber(str)
+        }
+
+        to_number(str) = num {
+          contains(str, "m")
+          num := tonumber(trim_suffix(str, "m")) / 1000
+        }
+
+        parse_memory(str) = bytes {
+          ends_with(str, "Gi")
+          bytes := tonumber(trim_suffix(str, "Gi")) * 1024 * 1024 * 1024
+        }
+
+        parse_memory(str) = bytes {
+          ends_with(str, "Mi")
+          bytes := tonumber(trim_suffix(str, "Mi")) * 1024 * 1024
+        }
+
+        parse_memory(str) = bytes {
+          ends_with(str, "Ki")
+          bytes := tonumber(trim_suffix(str, "Ki")) * 1024
+        }
+
+---
+# CPG2PVG-AI Resource Limits Policy
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sResourceLimits
+metadata:
+  name: cpg2pvg-resource-limits
+  labels:
+    app.kubernetes.io/name: resource-limits
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+    namespaces: ["cpg2pvg-ai"]
+  parameters:
+    minCPU: "100m"
+    minMemory: "128Mi"
+    maxCPU: "2"
+    maxMemory: "4Gi"
+
+---
+# Label Policy Template
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+  labels:
+    app.kubernetes.io/name: required-labels
+    app.kubernetes.io/component: policy-template
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                type: string
+            enforcementAction:
+              type: string
+              enum: ["deny", "warn", "dryrun"]
+  targets:
+    - target: admission.k8s.gatekeeper.sh/v1beta1
+      rego: |
+        package k8srequiredlabels
+
+        violation[{"msg": msg}] {
+          missing := missing_labels
+          count(missing) > 0
+          msg := sprintf("Missing required labels: %v", [missing])
+        }
+
+        missing_labels = labels {
+          labels := [label | not has_label(label)]
+        }
+
+        has_label(label) {
+          input.review.object.metadata.labels[label]
+        }
+
+        input.review.object.kind == "Deployment"
+        input.review.object.kind == "StatefulSet"
+        input.review.object.kind == "DaemonSet"
+
+---
+# CPG2PVG-AI Required Labels Policy
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: cpg2pvg-required-labels
+  labels:
+    app.kubernetes.io/name: required-labels
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+    namespaces: ["cpg2pvg-ai"]
+  parameters:
+    labels:
+      - "app.kubernetes.io/name"
+      - "app.kubernetes.io/component"
+      - "app.kubernetes.io/part-of"
+      - "version"
+
+---
+# Network Policy Template
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequirednetworkpolicy
+  labels:
+    app.kubernetes.io/name: required-networkpolicy
+    app.kubernetes.io/component: policy-template
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredNetworkPolicy
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            enforcementAction:
+              type: string
+              enum: ["deny", "warn", "dryrun"]
+  targets:
+    - target: admission.k8s.gatekeeper.sh/v1beta1
+      rego: |
+        package k8srequirednetworkpolicy
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Namespace"
+          input.review.object.metadata.name == "cpg2pvg-ai"
+          not has_network_policy
+          msg := "Namespace cpg2pvg-ai must have network policies"
+        }
+
+        has_network_policy {
+          count(network_policies) > 0
+        }
+
+        network_policies[policy] {
+          policy := data.inventory.namespace["cpg2pvg-ai"]["NetworkPolicy"][_]
+        }
+
+---
+# CPG2PVG-AI Network Policy Requirement
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredNetworkPolicy
+metadata:
+  name: cpg2pvg-required-networkpolicy
+  labels:
+    app.kubernetes.io/name: required-networkpolicy
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Namespace"]
+    namespaces: ["cpg2pvg-ai"]

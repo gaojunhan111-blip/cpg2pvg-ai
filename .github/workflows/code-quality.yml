@@ -1,0 +1,437 @@
+name: Code Quality and Security Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  # Static Code Analysis
+  static-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Backend Static Analysis
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          pip install --upgrade pip
+          pip install bandit safety pylint flake8 mypy isort black
+
+      - name: Backend Code Formatting Check
+        id: black-check
+        run: |
+          cd backend
+          black --check --diff app/ > black-diff.txt || true
+          if [ -s black-diff.txt ]; then
+            echo "result=failed" >> $GITHUB_OUTPUT
+            echo "Code formatting issues found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat black-diff.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ Code formatting is correct" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Backend Import Sorting Check
+        id: isort-check
+        run: |
+          cd backend
+          isort --check-only --diff app/ > isort-diff.txt || true
+          if [ -s isort-diff.txt ]; then
+            echo "result=failed" >> $GITHUB_OUTPUT
+            echo "Import sorting issues found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat isort-diff.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ Import sorting is correct" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Backend Linting (Flake8)
+        id: flake8-check
+        run: |
+          cd backend
+          flake8 app/ --format=json --output-file=flake8-report.json || true
+          if [ -s flake8-report.json ]; then
+            echo "result=failed" >> $GITHUB_OUTPUT
+            echo "Linting issues found:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | "- \(.filename):\(.line_number):\(.code) \(.message)"' flake8-report.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ No linting issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Backend Security Check (Bandit)
+        id: bandit-check
+        run: |
+          cd backend
+          bandit -r app/ -f json -o bandit-report.json || true
+          if [ -s bandit-report.json ]; then
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "Security issues found:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.results[] | "- \(.test_name) in \(.filename):\(.line_number) - \(.issue_text)"' bandit-report.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ No security issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Backend Dependency Security (Safety)
+        id: safety-check
+        run: |
+          cd backend
+          safety check --json --output safety-report.json || true
+          if [ -s safety-report.json ]; then
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "Dependency security issues found:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.vulnerabilities[] | "- \(.package) \(.installed_version): \(.advisory)"' safety-report.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ No dependency security issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Backend Type Checking (MyPy)
+        id: mypy-check
+        run: |
+          cd backend
+          mypy app/ --json-report mypy-report.json || true
+          if [ -s mypy-report.json/mypy.json ]; then
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "Type checking issues found:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | "- \(.file):\(.line):\(.message)"' mypy-report.json/mypy.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ No type checking issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # Frontend Static Analysis
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Frontend Linting (ESLint)
+        id: eslint-check
+        run: |
+          cd frontend
+          npm run lint -- --format=json > eslint-report.json || true
+          if [ -s eslint-report.json ]; then
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "ESLint issues found:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | "- \(.filePath):\(.line):\(.column): \(.message)"' eslint-report.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ No ESLint issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Frontend Type Checking
+        id: typescript-check
+        run: |
+          cd frontend
+          npm run type-check 2> typescript-report.txt || true
+          if [ -s typescript-report.txt ]; then
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "TypeScript issues found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat typescript-report.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ No TypeScript issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Frontend Prettier Check
+        id: prettier-check
+        run: |
+          cd frontend
+          npm run format:check 2> prettier-report.txt || true
+          if [ -s prettier-report.txt ]; then
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "Code formatting issues found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat prettier-report.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "✅ Code formatting is correct" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # Upload Reports
+      - name: Upload Static Analysis Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: static-analysis-reports
+          path: |
+            backend/black-diff.txt
+            backend/isort-diff.txt
+            backend/flake8-report.json
+            backend/bandit-report.json
+            backend/safety-report.json
+            backend/mypy-report.json/
+            frontend/eslint-report.json
+            frontend/typescript-report.txt
+            frontend/prettier-report.txt
+          retention-days: 30
+
+  # Complexity Analysis
+  complexity-analysis:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Complexity Tools
+        run: |
+          pip install radon mccabe lizard
+
+      - name: Analyze Backend Complexity
+        run: |
+          cd backend
+          echo "## Backend Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+
+          # Cyclomatic complexity
+          echo "### Cyclomatic Complexity" >> $GITHUB_STEP_SUMMARY
+          radon cc app/ --json > complexity-report.json
+          radon cc app/ --show-complexity >> $GITHUB_STEP_SUMMARY
+
+          # Maintainability index
+          echo "### Maintainability Index" >> $GITHUB_STEP_SUMMARY
+          radon mi app/ --show --json > maintainability-report.json
+
+          # Function count and length
+          echo "### Function Analysis" >> $GITHUB_STEP_SUMMARY
+          lizard app/ --json > lizard-report.json
+          lizard app/ --csv > lizard-report.csv
+
+          echo "- Total functions: $(jq '.[] | .functions | length' complexity-report.json | awk '{s+=$1} END {print s}')" >> $GITHUB_STEP_SUMMARY
+          echo "- Average complexity: $(jq '[.[] | .functions | .[] | .complexity] | add / length' complexity-report.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- Files with high complexity (>10): $(jq '[.[] | select(.complexity > 10)] | length' complexity-report.json)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Analyze Frontend Complexity
+        run: |
+          cd frontend
+          npm install -g complexity-report
+
+          echo "### Frontend Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+          complexity-report -f json src/ > frontend-complexity.json || true
+          complexity-report src/ >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Upload Complexity Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: complexity-reports
+          path: |
+            backend/complexity-report.json
+            backend/maintainability-report.json
+            backend/lizard-report.json
+            backend/lizard-report.csv
+            frontend/frontend-complexity.json
+          retention-days: 30
+
+  # Code Coverage Analysis
+  coverage-analysis:
+    name: Code Coverage Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run Backend Tests with Coverage
+        run: |
+          cd backend
+          python -m pytest tests/ --cov=app --cov-report=xml --cov-report=html --cov-fail-under=80
+
+      - name: Run Frontend Tests with Coverage
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: Generate Coverage Report
+        run: |
+          echo "## Code Coverage Report" >> $GITHUB_STEP_SUMMARY
+
+          # Backend coverage
+          cd backend
+          BACKEND_COVERAGE=$(coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "### Backend Coverage: ${BACKEND_COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+
+          # Frontend coverage
+          cd ../frontend
+          FRONTEND_COVERAGE=$(npm run test:coverage:report | grep "All files" | awk '{print $4}' | sed 's/%//')
+          echo "### Frontend Coverage: ${FRONTEND_COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+
+          # Overall coverage
+          OVERALL_COVERAGE=$(echo "scale=1; ($BACKEND_COVERAGE + $FRONTEND_COVERAGE) / 2" | bc)
+          echo "### Overall Coverage: ${OVERALL_COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+
+          # Coverage badge
+          if (( $(echo "$OVERALL_COVERAGE >= 80" | bc -l) )); then
+            echo "🟢 Coverage is good (>=80%)" >> $GITHUB_STEP_SUMMARY
+          elif (( $(echo "$OVERALL_COVERAGE >= 60" | bc -l) )); then
+            echo "🟡 Coverage needs improvement (60-79%)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔴 Coverage is poor (<60%)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            backend/htmlcov/
+            backend/coverage.xml
+            frontend/coverage/
+            frontend/clover.xml
+          retention-days: 30
+
+  # Security Scanning
+  security-scan:
+    name: Security Vulnerability Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy Results to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Semgrep Security Scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/cwe-top-25
+            p/owasp-top-ten
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python, javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+      - name: Run Dependency Check
+        run: |
+          # Backend dependency check
+          cd backend
+          pip install safety
+          safety check --json --output ../safety-backend.json || true
+
+          # Frontend dependency check
+          cd ../frontend
+          npm audit --audit-level=moderate --json > ../npm-audit.json || true
+
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            trivy-results.sarif
+            safety-backend.json
+            npm-audit.json
+          retention-days: 30
+
+  # Quality Gate
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [static-analysis, complexity-analysis, coverage-analysis, security-scan]
+    if: always()
+
+    steps:
+      - name: Quality Gate Check
+        run: |
+          echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+
+          # Check previous job results
+          STATIC_RESULT="${{ needs.static-analysis.result }}"
+          COMPLEXITY_RESULT="${{ needs.complexity-analysis.result }}"
+          COVERAGE_RESULT="${{ needs.coverage-analysis.result }}"
+          SECURITY_RESULT="${{ needs.security-scan.result }}"
+
+          echo "### Static Analysis: $STATIC_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "### Complexity Analysis: $COMPLEXITY_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage Analysis: $COVERAGE_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Scan: $SECURITY_RESULT" >> $GITHUB_STEP_SUMMARY
+
+          # Overall quality gate
+          if [[ "$STATIC_RESULT" == "success" && "$COMPLEXITY_RESULT" == "success" && "$COVERAGE_RESULT" == "success" && "$SECURITY_RESULT" == "success" ]]; then
+            echo "✅ All quality checks passed!" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "❌ Some quality checks failed" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the detailed reports and fix the issues." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

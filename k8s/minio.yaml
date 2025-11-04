@@ -1,0 +1,436 @@
+---
+# MinIO StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: cpg2pvg-ai
+    version: v1.0.0
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9000"
+    prometheus.io/path: "/minio/v2/metrics/cluster"
+spec:
+  serviceName: minio-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+      app.kubernetes.io/component: storage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio
+        app.kubernetes.io/component: storage
+        app.kubernetes.io/part-of: cpg2pvg-ai
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9000"
+        prometheus.io/path: "/minio/v2/metrics/cluster"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: init-minio
+          image: busybox:1.35
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Initializing MinIO data directory..."
+              # Wait for the volume to be ready
+              while [ ! -d /data ]; do
+                echo "Waiting for volume to be ready..."
+                sleep 1
+              done
+              echo "Volume is ready"
+              # Set proper permissions
+              chown -R 1000:1000 /data
+              chmod 755 /data
+          volumeMounts:
+            - name: minio-storage
+              mountPath: /data
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+            - name: MINIO_BROWSER_REDIRECT_URL
+              value: "http://minio-console.localhost:9001"
+            - name: MINIO_SERVER_URL
+              value: "http://minio-service:9000"
+          ports:
+            - containerPort: 9000
+              name: api
+              protocol: TCP
+            - containerPort: 9001
+              name: console
+              protocol: TCP
+          volumeMounts:
+            - name: minio-storage
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+        - name: minio-mc
+          image: minio/mc:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Wait for MinIO to be ready
+              until mc alias set minio http://localhost:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD; do
+                echo "Waiting for MinIO to be ready..."
+                sleep 5
+              done
+
+              # Create the default bucket if it doesn't exist
+              BUCKET_NAME=$(echo $MINIO_ROOT_USER | tr '[:upper:]' '[:lower:]')-storage
+              if ! mc mb minio/${BUCKET_NAME} 2>/dev/null; then
+                echo "Bucket ${BUCKET_NAME} already exists"
+              else
+                echo "Created bucket ${BUCKET_NAME}"
+                mc anonymous set public minio/${BUCKET_NAME}
+              fi
+
+              echo "MinIO initialization completed"
+              sleep infinity
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: minio-storage
+          persistentVolumeClaim:
+            claimName: minio-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: minio-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 500Gi
+        storageClassName: local-storage
+
+---
+# MinIO API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: cpg2pvg-ai
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9000"
+    prometheus.io/path: "/minio/v2/metrics/cluster"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: api
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+  sessionAffinity: None
+
+---
+# MinIO Console Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-console-service
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: console
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9001
+      targetPort: 9001
+      name: console
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+  sessionAffinity: None
+
+---
+# MinIO Headless Service for StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-headless
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: api
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+
+---
+# MinIO Configuration ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minio-config
+  namespace: cpg2pvg-ai
+data:
+  config.json: |
+    {
+      "version": "31",
+      "credential": {
+        "accessKey": "${MINIO_ROOT_USER}",
+        "secretKey": "${MINIO_ROOT_PASSWORD}"
+      },
+      "region": "us-east-1",
+      "browser": "on",
+      "logger": {
+        "console": {
+          "enable": true
+        },
+        "file": {
+          "enable": false,
+          "fileName": ""
+        }
+      },
+      "notify": {
+        "webhook": {
+          "1": {
+            "enable": false,
+            "endpoint": ""
+          }
+        }
+      }
+    }
+
+---
+# MinIO Bucket Creation Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-setup
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: setup
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio
+        app.kubernetes.io/component: setup
+        app.kubernetes.io/part-of: cpg2pvg-ai
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-minio
+          image: busybox:1.35
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for MinIO to be ready..."
+              until wget -q --spider http://minio-service:9000/minio/health/live; do
+                echo "MinIO not ready, waiting..."
+                sleep 5
+              done
+              echo "MinIO is ready!"
+      containers:
+        - name: create-buckets
+          image: minio/mc:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+
+              # Configure MinIO client
+              mc alias set minio http://minio-service:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD
+
+              # Create buckets
+              BUCKETS="cpg2pvg-uploads cpg2pvg-outputs cpg2pvg-temp cpg2pvg-backups cpg2pvg-logs"
+
+              for bucket in $BUCKETS; do
+                if mc ls minio/$bucket >/dev/null 2>&1; then
+                  echo "Bucket $bucket already exists"
+                else
+                  echo "Creating bucket: $bucket"
+                  mc mb minio/$bucket
+                  mc policy set public minio/$bucket 2>/dev/null || echo "Policy set failed for $bucket, continuing..."
+                  echo "Created bucket: $bucket"
+                fi
+              done
+
+              # Create user for application
+              if mc admin user info minio cpg2pvg-app >/dev/null 2>&1; then
+                echo "User cpg2pvg-app already exists"
+              else
+                echo "Creating user: cpg2pvg-app"
+                mc admin user add minio cpg2pvg-app $(openssl rand -base64 32)
+              fi
+
+              # Create policy for application user
+              cat > /tmp/app-policy.json << EOF
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:PutObject",
+                      "s3:DeleteObject",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::cpg2pvg-*",
+                      "arn:aws:s3:::cpg2pvg-*/*"
+                    ]
+                  }
+                ]
+              }
+              EOF
+
+              mc admin policy add minio app-policy /tmp/app-policy.json
+              mc admin policy set minio app-policy user=cpg2pvg-app
+
+              echo "MinIO setup completed successfully"
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+
+---
+# MinIO Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: minio-hpa
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: minio
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 85

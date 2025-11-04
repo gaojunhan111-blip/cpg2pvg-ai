@@ -1,0 +1,339 @@
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: cpg2pvg-ai
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9187"
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      initContainers:
+        - name: init-db
+          image: postgres:15-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Initializing PostgreSQL database..."
+              # Wait for the volume to be ready
+              while [ ! -d /var/lib/postgresql/data ]; do
+                echo "Waiting for volume to be ready..."
+                sleep 1
+              done
+              echo "Volume is ready"
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_REPLICATION_USER
+              value: replicator
+            - name: POSTGRES_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: replication-password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_INITDB_ARGS
+              value: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+          ports:
+            - containerPort: 5432
+              name: postgres
+              protocol: TCP
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-config
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+            - name: postgres-config
+              mountPath: /etc/postgresql/pg_hba.conf
+              subPath: pg_hba.conf
+            - name: postgres-backup
+              mountPath: /backups
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h localhost
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: postgres-config
+          configMap:
+            name: postgres-config
+        - name: postgres-backup
+          persistentVolumeClaim:
+            claimName: app-backups-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 100Gi
+        storageClassName: local-storage
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: cpg2pvg-ai
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9187"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+  sessionAffinity: None
+
+---
+# PostgreSQL Headless Service for StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+
+---
+# PostgreSQL Configuration ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: cpg2pvg-ai
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration File
+
+    # Connection Settings
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 200
+
+    # Memory Settings
+    shared_buffers = 256MB
+    effective_cache_size = 768MB
+    work_mem = 4MB
+    maintenance_work_mem = 64MB
+
+    # WAL Settings
+    wal_level = replica
+    fsync = on
+    synchronous_commit = on
+    wal_buffers = 16MB
+    wal_writer_delay = 200ms
+    checkpoint_completion_target = 0.9
+    max_wal_size = 1GB
+    min_wal_size = 80MB
+
+    # Logging
+    logging_collector = on
+    log_directory = 'pg_log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_statement = 'mod'
+    log_min_duration_statement = 1000
+
+    # Performance
+    checkpoint_timeout = 15min
+    autovacuum = on
+    autovacuum_max_workers = 3
+    autovacuum_naptime = 1min
+
+    # Replication
+    max_wal_senders = 3
+    wal_keep_segments = 64
+
+    # SSL
+    ssl = on
+    ssl_cert_file = '/var/lib/postgresql/server.crt'
+    ssl_key_file = '/var/lib/postgresql/server.key'
+
+    # Extensions
+    shared_preload_libraries = 'pg_stat_statements, pg_stat_statements, auto_explain'
+
+  pg_hba.conf: |
+    # PostgreSQL Client Authentication Configuration File
+
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+    # Local connections
+    local   all             all                                     trust
+    host    all             all                                     127.0.0.1/32     md5
+
+    # Kubernetes connections
+    host    all             all                                     10.0.0.0/8      md5
+    host    all             all                                     172.16.0.0/12    md5
+
+    # Replication connections
+    host    replication     replicator                             10.0.0.0/8      md5
+    host    replication     replicator                             172.16.0.0/12    md5
+
+    # SSL connections
+    hostssl all             all                                     0.0.0.0/0       md5
+
+---
+# PostgreSQL Backup Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-backup
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: backup
+        app.kubernetes.io/part-of: cpg2pvg-ai
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: backup
+          image: postgres:15-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              BACKUP_FILE="/backups/postgres_backup_${TIMESTAMP}.sql"
+
+              echo "Starting PostgreSQL backup at $(date)"
+              pg_dump -h postgres-service -U $POSTGRES_USER -d $POSTGRES_DB \
+                --no-password --verbose --format=custom --file=${BACKUP_FILE}
+
+              echo "Backup completed: ${BACKUP_FILE}"
+              echo "Backup size: $(stat -c%s ${BACKUP_FILE}) bytes"
+
+              # Keep only last 7 days of backups
+              find /backups -name "postgres_backup_*.sql" -mtime +7 -delete
+              echo "Old backups cleaned up"
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+          volumeMounts:
+            - name: postgres-backup
+              mountPath: /backups
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: postgres-backup
+          persistentVolumeClaim:
+            claimName: app-backups-pvc

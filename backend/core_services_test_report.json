@@ -1,0 +1,27 @@
+{
+  "test_timestamp": "2025-11-03T23:23:27.492257",
+  "total_tests": 4,
+  "successful_tests": 0,
+  "success_rate": 0.0,
+  "total_processing_time": 1.381034,
+  "grade": "D",
+  "test_results": {
+    "database_models": {
+      "success": false,
+      "error": "Column expression expected for argument 'remote_side'; got <built-in function id>."
+    },
+    "medical_parser": {
+      "success": false,
+      "error": "cannot process flags argument with a compiled pattern"
+    },
+    "knowledge_graph": {
+      "success": false,
+      "error": "'MedicalKnowledgeGraph' object has no attribute 'process_semantic_understanding'"
+    },
+    "intelligent_agents": {
+      "success": false,
+      "error": "name 'ProcessedContent' is not defined"
+    }
+  },
+  "working_components": []
+}

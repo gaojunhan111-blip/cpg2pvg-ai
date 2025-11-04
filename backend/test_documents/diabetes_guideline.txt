@@ -1,0 +1,69 @@
+# Diabetes Clinical Practice Guidelines
+
+## Overview
+Diabetes is a common metabolic disorder characterized by elevated blood glucose levels. According to World Health Organization statistics, approximately 422 million adults worldwide have diabetes.
+
+## Pathophysiology
+Diabetes is mainly divided into two types:
+1. Type 1 diabetes: Autoimmune destruction of pancreatic beta cells, leading to absolute insulin deficiency
+2. Type 2 diabetes: Insulin resistance and insufficient insulin secretion
+
+## Clinical Manifestations
+### Common Symptoms
+- Polydipsia, polyuria, polyphagia (three polys)
+- Weight loss
+- Blurred vision
+- Fatigue and weakness
+
+### Complications
+- Microvascular complications: Retinopathy, nephropathy, neuropathy
+- Macrovascular complications: Coronary heart disease, stroke, peripheral vascular disease
+
+## Diagnostic Criteria
+According to American Diabetes Association standards, diagnosis can be made if any of the following conditions are met:
+1. Fasting blood glucose ≥7.0 mmol/L
+2. 2-hour postprandial blood glucose ≥11.1 mmol/L
+3. Glycated hemoglobin ≥6.5%
+4. Typical symptoms + random blood glucose ≥11.1 mmol/L
+
+## Treatment Plans
+
+### Type 1 Diabetes Treatment
+- Insulin replacement therapy
+- Blood glucose monitoring
+- Dietary management
+
+### Type 2 Diabetes Treatment
+#### Lifestyle Interventions
+- Diet control
+- Regular exercise
+- Weight reduction
+
+#### Pharmacological Treatment
+First-line: Metformin
+Second-line: Sulfonylureas, DPP-4 inhibitors, SGLT2 inhibitors
+
+## Prevention Measures
+### Primary Prevention
+- Healthy diet
+- Regular exercise
+- Weight control
+- Smoking cessation and alcohol limitation
+
+### Screening Recommendations
+- People aged ≥45 years should undergo regular screening
+- High-risk groups such as obese, hypertensive, and dyslipidemic individuals should start screening earlier
+
+## Monitoring and Follow-up
+
+### Self-monitoring
+- Blood glucose monitoring frequency adjusted according to treatment plan
+- Record blood glucose values and related factors
+
+### Regular Follow-up
+- Follow-up every 3-6 months
+- Check glycated hemoglobin
+- Assess complications
+
+## Conclusion
+Diabetes is a chronic disease requiring long-term management. Through standardized treatment and monitoring, blood glucose can be effectively controlled, complications prevented, and patient quality of life improved.

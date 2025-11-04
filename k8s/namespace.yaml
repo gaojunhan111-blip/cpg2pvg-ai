@@ -1,0 +1,13 @@
+---
+# CPG2PVG-AI Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cpg2pvg-ai
+  labels:
+    name: cpg2pvg-ai
+    app.kubernetes.io/name: cpg2pvg-ai
+    app.kubernetes.io/component: namespace
+  annotations:
+    description: "CPG2PVG-AI system namespace for medical guideline processing"
+    contact: "team@cpg2pvg-ai.com"

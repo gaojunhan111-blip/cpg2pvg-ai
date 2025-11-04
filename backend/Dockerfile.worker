@@ -1,0 +1,33 @@
+# Celery Worker Dockerfile
+# Based on the main backend Dockerfile but optimized for worker tasks
+
+FROM cpg2pvg-ai-backend:latest as worker-base
+
+# Set build arguments
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+ARG WORKER_TYPE=default
+
+# Set labels for worker
+LABEL maintainer="CPG2PVG-AI Team" \
+      org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.name="cpg2pvg-ai-worker" \
+      org.label-schema.description="CPG2PVG-AI Celery Worker" \
+      org.label-schema.worker-type=$WORKER_TYPE \
+      org.label-schema.version=$VERSION
+
+# Set environment variables
+ENV WORKER_TYPE=$WORKER_TYPE \
+    C_FORCE_ROOT=true
+
+# Copy worker-specific scripts
+COPY scripts/docker-entrypoint-worker.sh /app/scripts/
+RUN chmod +x /app/scripts/docker-entrypoint-worker.sh
+
+# Create additional directories for worker
+RUN mkdir -p /app/worker_data /app/temp/worker && \
+    chown -R appuser:appuser /app
+
+# Override default command
+CMD ["/app/scripts/docker-entrypoint-worker.sh"]

@@ -1,0 +1,631 @@
+---
+# Celery Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: celery-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: cpg2pvg-ai
+    version: v1.0.0
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2
+      maxSurge: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-worker
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-worker
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: cpg2pvg-ai
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-redis
+          image: redis:7-alpine
+          command:
+            - /bin/sh
+            -c
+            - |
+              echo "Waiting for Redis to be ready..."
+              until redis-cli -h redis-service ping; do
+                echo "Redis not ready, waiting..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+        - name: wait-for-minio
+          image: busybox:1.35
+          command:
+            - /bin/sh
+            -c
+            - |
+              echo "Waiting for MinIO to be ready..."
+              until wget -q --spider http://minio-service:9000/minio/health/live; do
+                echo "MinIO not ready, waiting..."
+                sleep 5
+              done
+              echo "MinIO is ready!"
+      containers:
+        - name: celery-worker
+          image: cpg2pvg-ai/celery-worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - app.celery_app
+            - worker
+            - --loglevel=info
+            - --concurrency=4
+            - --prefetch-multiplier=1
+            - --max-tasks-per-child=1000
+            - --max-memory-per-child=512000000  # 512MB
+            - --time-limit=3600  # 1 hour
+            - --soft-time-limit=3000  # 50 minutes
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: connection-uri
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_BROKER_URL
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_RESULT_BACKEND
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: MINIO_ENDPOINT
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+            - name: MINIO_BUCKET
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: MINIO_BUCKET
+            - name: MINIO_SECURE
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: MINIO_SECURE
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: app-secret
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: DEBUG
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: LOG_LEVEL
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: ENVIRONMENT
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: openai-api-key
+            - name: OPENAI_MODEL
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: OPENAI_MODEL
+            - name: OPENAI_MAX_TOKENS
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: OPENAI_MAX_TOKENS
+            - name: OPENAI_TEMPERATURE
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: OPENAI_TEMPERATURE
+            - name: WORKER_TYPE
+              value: "default"
+            - name: WORKER_TIMEOUT
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: WORKER_TIMEOUT
+            - name: MAX_CONCURRENT_TASKS
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: MAX_CONCURRENT_TASKS
+            - name: TASK_SOFT_TIME_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: TASK_SOFT_TIME_LIMIT
+            - name: TASK_TIME_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: TASK_TIME_LIMIT
+            - name: CELERY_WORKER_CONCURRENCY
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_WORKER_CONCURRENCY
+            - name: CELERY_WORKER_PREFETCH_MULTIPLIER
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_WORKER_PREFETCH_MULTIPLIER
+          volumeMounts:
+            - name: app-uploads
+              mountPath: /app/uploads
+            - name: app-outputs
+              mountPath: /app/outputs
+            - name: app-temp
+              mountPath: /app/temp
+            - name: worker-data
+              mountPath: /app/worker_data
+            - name: app-logs
+              mountPath: /app/logs
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - celery -A app.celery_app inspect ping
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                -c
+                - celery -A app.celery_app inspect ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+      volumes:
+        - name: app-uploads
+          persistentVolumeClaim:
+            claimName: app-uploads-pvc
+        - name: app-outputs
+          persistentVolumeClaim:
+            claimName: app-outputs-pvc
+        - name: app-temp
+          emptyDir:
+            medium: Memory
+        - name: worker-data
+          emptyDir: {}
+        - name: app-logs
+          persistentVolumeClaim:
+            claimName: app-logs-pvc
+      nodeSelector:
+        nodeType: worker
+        storage: fast-ssd
+      tolerations:
+        - key: "worker"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - celery-worker
+              topologyKey: kubernetes.io/hostname
+
+---
+# Celery Beat Scheduler
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: celery-beat
+    app.kubernetes.io/component: scheduler
+    app.kubernetes.io/part-of: cpg2pvg-ai
+    version: v1.0.0
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-beat
+      app.kubernetes.io/component: scheduler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-beat
+        app.kubernetes.io/component: scheduler
+        app.kubernetes.io/part-of: cpg2pvg-ai
+        version: v1.0.0
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-redis
+          image: redis:7-alpine
+          command:
+            - /bin/sh
+            -c
+            - |
+              echo "Waiting for Redis to be ready..."
+              until redis-cli -h redis-service ping; do
+                echo "Redis not ready, waiting..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+      containers:
+        - name: celery-beat
+          image: cpg2pvg-ai/celery-worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            -A
+            - app.celery_app
+            - beat
+            - --loglevel=info
+            - --schedule=/app/celerybeat-schedule.py
+            - --pidfile=/tmp/celerybeat.pid
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: connection-uri
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_BROKER_URL
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_RESULT_BACKEND
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: app-secret
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: DEBUG
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: LOG_LEVEL
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapRef:
+                  name: cpg2pvg-ai-config
+                  key: ENVIRONMENT
+            - name: WORKER_TYPE
+              value: "beat"
+          volumeMounts:
+            - name: app-logs
+              mountPath: /app/logs
+            - name: celerybeat-schedule
+              configMap:
+                name: celerybeat-schedule
+          livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - test -f /tmp/celerybeat.pid || exit 1
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - celery -A app.celery_app inspect active
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+      volumes:
+        - name: app-logs
+          persistentVolumeClaim:
+            claimName: app-logs-pvc
+        - name: celerybeat-schedule
+          configMap:
+            name: celerybeat-schedule
+            defaultMode: 0755
+      nodeSelector:
+        nodeType: worker
+      tolerations:
+        - key: "worker"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+
+---
+# Celery Flower Monitoring
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-flower
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: celery-flower
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+    version: v1.0.0
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-flower
+      app.kubernetes.io/component: monitoring
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-flower
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: cpg2pvg-ai
+        version: v1.0.0
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: celery-flower
+          image: cpg2pvg-ai/celery-worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - app.celery_app
+            - flower
+            - --port=5555
+            - --broker=redis://redis-service:6379/0
+            --basic-auth=${FLOWER_USER}:${FLOWER_PASSWORD}
+          env:
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cpg2pvg-ai-config
+                  key: CELERY_BROKER_URL
+            - name: FLOWER_PORT
+              value: "5555"
+            - name: FLOWER_BASIC_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: flower-auth
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpg2pvg-ai-secrets
+                  key: app-secret
+          ports:
+            - containerPort: 5555
+              name: flower
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5555
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5555
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+
+---
+# Flower Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: celery-flower-service
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: celery-flower
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5555"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5555
+      targetPort: 5555
+      name: flower
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: celery-flower
+    app.kubernetes.io/component: monitoring
+
+---
+# Celery Worker Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: celery-worker-hpa
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: celery-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: cpg2pvg-ai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: celery-worker
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 85
+    - type: External
+      external:
+        metric:
+          name: celery_worker_queue_length
+        target:
+          type: AverageValue
+          averageValue: 10
+
+---
+# CeleryBeat Schedule ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: celerybeat-schedule
+  namespace: cpg2pvg-ai
+data:
+  celerybeat-schedule.py: |
+    from celery.schedules import crontab
+    from app.tasks import (
+        cleanup_temp_files,
+        generate_daily_reports,
+        backup_database,
+        check_system_health
+    )
+
+    # Daily cleanup of temporary files
+    crontab('0 2 * * *', 'cleanup_temp_files.s()')
+
+    # Generate daily system reports
+    crontab('0 6 * * *', 'generate_daily_reports.s()')
+
+    # Weekly database backup
+    crontab('0 3 * * 0', 'backup_database.s()')
+
+    # System health check every 5 minutes
+    crontab('*/5 * * * *', 'check_system_health.s()')
+
+    # Process failed tasks retry every 10 minutes
+    crontab('*/10 * * * *', 'app.celery_app.send_task(\'app.tasks.retry_failed_tasks\')')
+
+    # Archive old logs weekly
+    crontab('0 1 * * 0', 'app.celery_app.send_task(\'app.tasks.archive_old_logs\')')
+
+---
+# Flower Authentication Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flower-auth
+  namespace: cpg2pvg-ai
+  labels:
+    app.kubernetes.io/name: celery-flower
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: cpg2pvg-ai
+type: Opaque
+data:
+  # flower: echo -n 'admin:admin' | base64
+  flower-auth: YWRtaW46YWRtaW4=  # admin:admin
